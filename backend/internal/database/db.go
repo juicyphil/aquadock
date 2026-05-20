@@ -13,7 +13,7 @@ type DB struct {
 }
 
 func New(dbPath string) (*DB, error) {
-	db, err := sql.Open("sqlite3", dbPath+"?_journal_mode=WAL&_foreign_keys=on")
+	db, err := sql.Open("sqlite3", dbPath+"?_journal_mode=WAL&_foreign_keys=on&_loc=auto")
 	if err != nil {
 		return nil, fmt.Errorf("open db: %w", err)
 	}
