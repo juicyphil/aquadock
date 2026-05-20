@@ -91,7 +91,28 @@ body {
 
 .card-photo { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
 .detail-photo { width: 100%; max-height: 250px; object-fit: cover; border-radius: var(--radius); margin-bottom: 1rem; }
+.clickable-photo { cursor: pointer; transition: opacity 0.15s; }
+.clickable-photo:hover { opacity: 0.85; }
 .detail-emoji { font-size: 3rem; display: block; text-align: center; margin-bottom: 1rem; }
+
+.lightbox-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex;
+  align-items: center; justify-content: center; z-index: 2000; padding: 2rem;
+  cursor: pointer;
+}
+.lightbox-image {
+  max-width: 90vw; max-height: 90vh; object-fit: contain;
+  border-radius: 8px; cursor: default;
+}
+
+.param-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+.param-chart-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem;
+}
+.param-chart-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text2); }
+.param-unit { font-weight: 400; color: var(--text3); }
+
+@media (max-width: 600px) { .param-charts { grid-template-columns: 1fr; } }
 
 .loading-screen {
   display: flex; align-items: center; justify-content: center;

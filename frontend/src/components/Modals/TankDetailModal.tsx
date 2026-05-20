@@ -4,6 +4,7 @@ import { EVENT_TYPES } from '../../types'
 import { api } from '../../api/client'
 import { useTranslation } from '../../i18n'
 import { useToast } from '../UI/Toast'
+import { ParamChart } from '../Charts/ParamChart'
 
 interface Props {
   tank: Tank
@@ -30,6 +31,7 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
   const [editForm, setEditForm] = useState({ name: tank.name, emoji: tank.emoji, liters: tank.liters, filter_type: tank.filter_type, notes: tank.notes })
   const [pendingPhoto, setPendingPhoto] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const [showLightbox, setShowLightbox] = useState(false)
 
   const loadData = useCallback(async () => {
     try {
@@ -152,7 +154,7 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
               {!editing ? (
                 <div>
                   {tank.photo_url ? (
-                    <img className="detail-photo" src={tank.photo_url} alt={tank.name} />
+                    <img className="detail-photo clickable-photo" src={tank.photo_url} alt={tank.name} onClick={() => setShowLightbox(true)} />
                   ) : (
                     <span className="detail-emoji">{tank.emoji}</span>
                   )}
@@ -328,36 +330,39 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
               {params.length === 0 ? (
                 <p className="empty-state">{tr('param.no_data')}</p>
               ) : (
-                <div className="params-table">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>{tr('param.tested_at')}</th>
-                        <th>NH3</th>
-                        <th>NO2</th>
-                        <th>NO3</th>
-                        <th>pH</th>
-                        <th>Temp</th>
-                        <th>GH</th>
-                        <th>KH</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {params.map(p => (
-                        <tr key={p.id}>
-                          <td>{p.tested_at}</td>
-                          <td>{p.ammonia ?? '—'}</td>
-                          <td>{p.nitrite ?? '—'}</td>
-                          <td>{p.nitrate ?? '—'}</td>
-                          <td>{p.ph ?? '—'}</td>
-                          <td>{p.temperature ?? '—'}</td>
-                          <td>{p.gh ?? '—'}</td>
-                          <td>{p.kh ?? '—'}</td>
+                <>
+                  <ParamChart params={params} />
+                  <div className="params-table">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>{tr('param.tested_at')}</th>
+                          <th>NH3</th>
+                          <th>NO2</th>
+                          <th>NO3</th>
+                          <th>pH</th>
+                          <th>Temp</th>
+                          <th>GH</th>
+                          <th>KH</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {params.map(p => (
+                          <tr key={p.id}>
+                            <td>{p.tested_at}</td>
+                            <td>{p.ammonia ?? '—'}</td>
+                            <td>{p.nitrite ?? '—'}</td>
+                            <td>{p.nitrate ?? '—'}</td>
+                            <td>{p.ph ?? '—'}</td>
+                            <td>{p.temperature ?? '—'}</td>
+                            <td>{p.gh ?? '—'}</td>
+                            <td>{p.kh ?? '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
               {showLogParam && (
                 <div className="modal-inline">
@@ -384,6 +389,12 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
           )}
         </div>
       </div>
+
+      {showLightbox && tank.photo_url && (
+        <div className="lightbox-overlay" onClick={() => setShowLightbox(false)}>
+          <img className="lightbox-image" src={tank.photo_url} alt={tank.name} />
+        </div>
+      )}
     </div>
   )
 }
