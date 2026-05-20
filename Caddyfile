@@ -1,0 +1,21 @@
+:8000 {
+    root * /app/frontend/dist
+    header X-Content-Type-Options nosniff
+    header X-Frame-Options DENY
+    header Referrer-Policy strict-origin-when-cross-origin
+    header Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    encode gzip
+
+    route /api/* {
+        reverse_proxy 127.0.0.1:8001
+    }
+
+    route {
+        try_files {path} /index.html
+        file_server
+    }
+
+    log {
+        output file /var/log/caddy/access.log
+    }
+}

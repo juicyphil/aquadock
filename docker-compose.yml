@@ -1,0 +1,23 @@
+services:
+  aquadock:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: aquadock:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - aquadock_data:/data
+    environment:
+      - DB_PATH=/data/aquadock.db
+      - PORT=8001
+      - JWT_SECRET=change-this-to-a-random-secret
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/api/dashboard"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  aquadock_data:

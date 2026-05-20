@@ -1,0 +1,103 @@
+import React, { useState } from 'react'
+import type { TankCreate } from '../../types'
+import { TANK_TYPES, SUBTYPES } from '../../types'
+import { api } from '../../api/client'
+import { useTranslation } from '../../i18n'
+import { useToast } from '../UI/Toast'
+
+interface Props {
+  onClose: () => void
+  onSaved: () => void
+}
+
+export function AddTankModal({ onClose, onSaved }: Props) {
+  const { t } = useTranslation()
+  const { toast } = useToast()
+  const [form, setForm] = useState<TankCreate>({
+    name: '',
+    emoji: '🐠',
+    gallons: 20,
+    type: 'freshwater',
+    subtype: 'community',
+    setup_date: new Date().toISOString().slice(0, 10),
+    filter_type: '',
+    notes: '',
+  })
+
+  const subtypes = SUBTYPES[form.type] || []
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!form.name || !form.gallons || !form.setup_date) {
+      toast('Name, gallons, and setup date required', 'error')
+      return
+    }
+    try {
+      await api.createTank(form)
+      toast('Tank created!', 'success')
+      onSaved()
+    } catch (err: any) {
+      toast(err.message, 'error')
+    }
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal modal-lg" onClick={e => e.stopPropagation()}>
+        <h2>{t('tank.add')}</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-row">
+            <div className="form-group">
+              <label>{t('tank.name')}</label>
+              <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+            </div>
+            <div className="form-group">
+              <label>Emoji</label>
+              <input value={form.emoji} onChange={e => setForm({ ...form, emoji: e.target.value })} />
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label>{t('tank.gallons')}</label>
+              <input type="number" value={form.gallons} onChange={e => setForm({ ...form, gallons: Number(e.target.value) })} required />
+            </div>
+            <div className="form-group">
+              <label>{t('tank.type')}</label>
+              <select value={form.type} onChange={e => {
+                const newType = e.target.value
+                const subs = SUBTYPES[newType] || []
+                setForm({ ...form, type: newType, subtype: subs[0] || '' })
+              }}>
+                {TANK_TYPES.map(tp => <option key={tp} value={tp}>{t(tp)}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>{t('tank.subtype')}</label>
+              <select value={form.subtype} onChange={e => setForm({ ...form, subtype: e.target.value })}>
+                {subtypes.map(s => <option key={s} value={s}>{t(s)}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label>{t('tank.setup_date')}</label>
+              <input type="date" value={form.setup_date} onChange={e => setForm({ ...form, setup_date: e.target.value })} required />
+            </div>
+            <div className="form-group">
+              <label>{t('tank.filter_type')}</label>
+              <input value={form.filter_type} onChange={e => setForm({ ...form, filter_type: e.target.value })} />
+            </div>
+          </div>
+          <div className="form-group">
+            <label>{t('tank.notes')}</label>
+            <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+          </div>
+          <div className="form-actions">
+            <button type="submit" className="btn btn-primary">{t('tank.add')}</button>
+            <button type="button" className="btn btn-text" onClick={onClose}>{t('common.cancel')}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
