@@ -8,6 +8,7 @@ export interface Tank {
   setup_date: string
   filter_type: string
   notes: string
+  photo_url: string | null
   created_at: string
 }
 
@@ -17,6 +18,7 @@ export interface TankUpdate {
   liters?: number
   filter_type?: string
   notes?: string
+  photo_url?: string | null
 }
 
 export interface TankCreate {

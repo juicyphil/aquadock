@@ -29,6 +29,7 @@ func main() {
 	paramRangeHandler := handlers.NewParamRangeHandler(db)
 	dashboardHandler := handlers.NewDashboardHandler(db)
 	authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret)
+	photoHandler := handlers.NewPhotoHandler(db, cfg.PhotoDir)
 
 	r := chi.NewRouter()
 	r.Use(chimw.Logger)
@@ -41,6 +42,7 @@ func main() {
 	}))
 
 	r.Route("/api", func(r chi.Router) {
+		r.Get("/tanks/photos/{filename}", photoHandler.Serve)
 		r.Post("/auth/register", authHandler.Register)
 		r.Post("/auth/login", authHandler.Login)
 		r.With(handlers.JWTAuth(cfg.JWTSecret)).Get("/auth/status", authHandler.Status)
@@ -54,6 +56,7 @@ func main() {
 				r.Get("/{id}", tankHandler.Get)
 				r.Put("/{id}", tankHandler.Update)
 				r.Delete("/{id}", tankHandler.Delete)
+				r.Post("/{id}/photo", photoHandler.Upload)
 
 				r.Route("/{tankId}/inhabitants", func(r chi.Router) {
 					r.Get("/", inhabitantHandler.List)

@@ -28,6 +28,8 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
   const [newParam, setNewParam] = useState({ ammonia: '', nitrite: '', nitrate: '', ph: '', temperature: '', gh: '', kh: '', notes: '' })
   const [editing, setEditing] = useState(false)
   const [editForm, setEditForm] = useState({ name: tank.name, emoji: tank.emoji, liters: tank.liters, filter_type: tank.filter_type, notes: tank.notes })
+  const [pendingPhoto, setPendingPhoto] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
 
   const loadData = useCallback(async () => {
     try {
@@ -43,6 +45,14 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
   }, [tank.id])
 
   useEffect(() => { loadData() }, [loadData])
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setPendingPhoto(file)
+      setPhotoPreview(URL.createObjectURL(file))
+    }
+  }
 
   const handleAddInhabitant = async () => {
     try {
@@ -99,9 +109,18 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
 
   const handleSaveEdit = async () => {
     try {
-      await api.updateTank(tank.id, editForm)
+      const updateData: any = { ...editForm }
+      let photoURL = tank.photo_url
+      if (pendingPhoto) {
+        const result = await api.uploadTankPhoto(tank.id, pendingPhoto)
+        photoURL = result.photo_url
+      }
+      updateData.photo_url = photoURL
+      await api.updateTank(tank.id, updateData)
       toast('Tank updated', 'success')
       setEditing(false)
+      setPendingPhoto(null)
+      setPhotoPreview(null)
       onUpdated()
     } catch (err: any) { toast(err.message, 'error') }
   }
@@ -132,6 +151,11 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
             <div>
               {!editing ? (
                 <div>
+                  {tank.photo_url ? (
+                    <img className="detail-photo" src={tank.photo_url} alt={tank.name} />
+                  ) : (
+                    <span className="detail-emoji">{tank.emoji}</span>
+                  )}
                   <h2>{tank.emoji} {tank.name}</h2>
                   <div className="detail-grid">
                     <div><strong>{tr('tank.liters')}:</strong> {tank.liters}L</div>
@@ -149,6 +173,13 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
               ) : (
                 <div>
                   <h2>{tr('tank.edit')}</h2>
+                  {(photoPreview || tank.photo_url) && (
+                    <img className="detail-photo" src={photoPreview || tank.photo_url!} alt={tank.name} />
+                  )}
+                  <div className="form-group">
+                    <label>Photo</label>
+                    <input type="file" accept="image/*" onChange={handlePhotoChange} />
+                  </div>
                   <div className="form-group">
                     <label>{tr('tank.name')}</label>
                     <input value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} />
@@ -171,7 +202,7 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
                   </div>
                   <div className="form-actions">
                     <button className="btn btn-primary" onClick={handleSaveEdit}>{tr('common.save')}</button>
-                    <button className="btn btn-text" onClick={() => setEditing(false)}>{tr('common.cancel')}</button>
+                    <button className="btn btn-text" onClick={() => { setEditing(false); setPendingPhoto(null); setPhotoPreview(null) }}>{tr('common.cancel')}</button>
                   </div>
                 </div>
               )}

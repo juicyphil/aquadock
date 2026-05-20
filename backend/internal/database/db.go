@@ -49,6 +49,7 @@ func (db *DB) Init() error {
 		subtype TEXT,
 		setup_date TEXT NOT NULL,
 		filter_type TEXT,
+		photo_url TEXT,
 		notes TEXT,
 		created_at TEXT NOT NULL DEFAULT (datetime('now'))
 	);
@@ -115,6 +116,8 @@ func (db *DB) Init() error {
 	if _, err := db.Exec(schema); err != nil {
 		return fmt.Errorf("exec schema: %w", err)
 	}
+
+	db.Exec("ALTER TABLE tanks ADD COLUMN photo_url TEXT")
 
 	return db.seedParamRanges()
 }

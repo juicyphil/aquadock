@@ -7,9 +7,10 @@ import (
 )
 
 type Config struct {
-	Port     string
-	DBPath   string
+	Port      string
+	DBPath    string
 	JWTSecret string
+	PhotoDir  string
 }
 
 func Load() *Config {
@@ -30,9 +31,15 @@ func Load() *Config {
 		jwtSecret = "change-me-to-a-random-secret"
 	}
 
+	photoDir := os.Getenv("PHOTO_DIR")
+	if photoDir == "" {
+		photoDir = "./data/photos"
+	}
+
 	return &Config{
 		Port:      port,
 		DBPath:    dbPath,
 		JWTSecret: jwtSecret,
+		PhotoDir:  photoDir,
 	}
 }

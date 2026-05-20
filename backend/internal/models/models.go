@@ -1,38 +1,41 @@
 package models
 
 type Tank struct {
-	ID         int64  `json:"id"`
-	Name       string `json:"name"`
-	Emoji      string `json:"emoji"`
-	Liters    float64 `json:"liters"`
-	Type       string `json:"type"`
-	Subtype    string `json:"subtype"`
-	SetupDate  string `json:"setup_date"`
-	FilterType string `json:"filter_type"`
-	Notes      string `json:"notes"`
-	CreatedAt  string `json:"created_at"`
-}
-
-type TankCreate struct {
+	ID         int64   `json:"id"`
 	Name       string  `json:"name"`
 	Emoji      string  `json:"emoji"`
-	Liters    float64 `json:"liters"`
+	Liters     float64 `json:"liters"`
 	Type       string  `json:"type"`
 	Subtype    string  `json:"subtype"`
 	SetupDate  string  `json:"setup_date"`
 	FilterType string  `json:"filter_type"`
 	Notes      string  `json:"notes"`
+	PhotoURL   *string `json:"photo_url"`
+	CreatedAt  string  `json:"created_at"`
+}
+
+type TankCreate struct {
+	Name       string  `json:"name"`
+	Emoji      string  `json:"emoji"`
+	Liters     float64 `json:"liters"`
+	Type       string  `json:"type"`
+	Subtype    string  `json:"subtype"`
+	SetupDate  string  `json:"setup_date"`
+	FilterType string  `json:"filter_type"`
+	Notes      string  `json:"notes"`
+	PhotoURL   *string `json:"photo_url"`
 }
 
 type TankUpdate struct {
 	Name       *string  `json:"name"`
 	Emoji      *string  `json:"emoji"`
-	Liters    *float64 `json:"liters"`
+	Liters     *float64 `json:"liters"`
 	Type       *string  `json:"type"`
 	Subtype    *string  `json:"subtype"`
 	SetupDate  *string  `json:"setup_date"`
 	FilterType *string  `json:"filter_type"`
 	Notes      *string  `json:"notes"`
+	PhotoURL   *string  `json:"photo_url"`
 }
 
 type Inhabitant struct {

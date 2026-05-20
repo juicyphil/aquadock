@@ -23,6 +23,7 @@ export function AddTankModal({ onClose, onSaved }: Props) {
     filter_type: '',
     notes: '',
   })
+  const [pendingPhoto, setPendingPhoto] = useState<File | null>(null)
 
   const subtypes = SUBTYPES[form.type] || []
 
@@ -33,7 +34,10 @@ export function AddTankModal({ onClose, onSaved }: Props) {
       return
     }
     try {
-      await api.createTank(form)
+      const created = await api.createTank(form)
+      if (pendingPhoto && created?.id) {
+        await api.uploadTankPhoto(created.id, pendingPhoto)
+      }
       toast('Tank created!', 'success')
       onSaved()
     } catch (err: any) {
@@ -87,6 +91,13 @@ export function AddTankModal({ onClose, onSaved }: Props) {
               <label>{t('tank.filter_type')}</label>
               <input value={form.filter_type} onChange={e => setForm({ ...form, filter_type: e.target.value })} />
             </div>
+          </div>
+          <div className="form-group">
+            <label>Photo</label>
+            <input type="file" accept="image/*" onChange={e => {
+              const file = e.target.files?.[0]
+              if (file) setPendingPhoto(file)
+            }} />
           </div>
           <div className="form-group">
             <label>{t('tank.notes')}</label>

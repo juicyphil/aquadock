@@ -36,7 +36,11 @@ export function DashboardView({ dashboard, onSelectTank, onRefresh }: Props) {
         {dashboard.tanks.map(tank => (
           <div key={tank.id} className="tank-card" onClick={() => onSelectTank(tank)}>
             <div className="tank-card-header">
-              <span className="tank-emoji">{tank.emoji}</span>
+              {tank.photo_url ? (
+                <img className="card-photo" src={tank.photo_url} alt={tank.name} />
+              ) : (
+                <span className="tank-emoji">{tank.emoji}</span>
+              )}
               <span className="tank-name">{tank.name}</span>
             </div>
             <div className="tank-card-details">
