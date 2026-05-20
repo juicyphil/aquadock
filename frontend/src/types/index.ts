@@ -2,7 +2,7 @@ export interface Tank {
   id: number
   name: string
   emoji: string
-  gallons: number
+  liters: number
   type: 'freshwater' | 'saltwater' | 'coldwater'
   subtype: string
   setup_date: string
@@ -14,7 +14,7 @@ export interface Tank {
 export interface TankUpdate {
   name?: string
   emoji?: string
-  gallons?: number
+  liters?: number
   filter_type?: string
   notes?: string
 }
@@ -22,7 +22,7 @@ export interface TankUpdate {
 export interface TankCreate {
   name: string
   emoji?: string
-  gallons: number
+  liters: number
   type: string
   subtype: string
   setup_date: string

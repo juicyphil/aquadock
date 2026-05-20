@@ -27,7 +27,7 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
   const [newEv, setNewEv] = useState({ type: 'feed' as const, title: '', scheduled_date: new Date().toISOString().slice(0, 10), recurrence: '', note: '' })
   const [newParam, setNewParam] = useState({ ammonia: '', nitrite: '', nitrate: '', ph: '', temperature: '', gh: '', kh: '', notes: '' })
   const [editing, setEditing] = useState(false)
-  const [editForm, setEditForm] = useState({ name: tank.name, emoji: tank.emoji, gallons: tank.gallons, filter_type: tank.filter_type, notes: tank.notes })
+  const [editForm, setEditForm] = useState({ name: tank.name, emoji: tank.emoji, liters: tank.liters, filter_type: tank.filter_type, notes: tank.notes })
 
   const loadData = useCallback(async () => {
     try {
@@ -134,7 +134,7 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
                 <div>
                   <h2>{tank.emoji} {tank.name}</h2>
                   <div className="detail-grid">
-                    <div><strong>{tr('tank.gallons')}:</strong> {tank.gallons}gal</div>
+                    <div><strong>{tr('tank.liters')}:</strong> {tank.liters}L</div>
                     <div><strong>{tr('tank.type')}:</strong> {tr(tank.type)}</div>
                     <div><strong>{tr('tank.subtype')}:</strong> {tr(tank.subtype)}</div>
                     <div><strong>{tr('tank.setup_date')}:</strong> {tank.setup_date}</div>
@@ -158,8 +158,8 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
                     <input value={editForm.emoji} onChange={e => setEditForm({ ...editForm, emoji: e.target.value })} />
                   </div>
                   <div className="form-group">
-                    <label>{tr('tank.gallons')}</label>
-                    <input type="number" value={editForm.gallons} onChange={e => setEditForm({ ...editForm, gallons: Number(e.target.value) })} />
+                    <label>{tr('tank.liters')}</label>
+                    <input type="number" value={editForm.liters} onChange={e => setEditForm({ ...editForm, liters: Number(e.target.value) })} />
                   </div>
                   <div className="form-group">
                     <label>{tr('tank.filter_type')}</label>

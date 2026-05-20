@@ -40,7 +40,7 @@ export function DashboardView({ dashboard, onSelectTank, onRefresh }: Props) {
               <span className="tank-name">{tank.name}</span>
             </div>
             <div className="tank-card-details">
-              <span>{tank.gallons}gal</span>
+              <span>{tank.liters}L</span>
               <span>{t(tank.type)}</span>
               {tank.subtype && <span>{t(tank.subtype)}</span>}
             </div>

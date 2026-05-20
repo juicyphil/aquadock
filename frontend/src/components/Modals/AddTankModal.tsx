@@ -16,7 +16,7 @@ export function AddTankModal({ onClose, onSaved }: Props) {
   const [form, setForm] = useState<TankCreate>({
     name: '',
     emoji: '🐠',
-    gallons: 20,
+    liters: 75,
     type: 'freshwater',
     subtype: 'community',
     setup_date: new Date().toISOString().slice(0, 10),
@@ -28,8 +28,8 @@ export function AddTankModal({ onClose, onSaved }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.name || !form.gallons || !form.setup_date) {
-      toast('Name, gallons, and setup date required', 'error')
+    if (!form.name || !form.liters || !form.setup_date) {
+      toast('Name, liters, and setup date required', 'error')
       return
     }
     try {
@@ -58,8 +58,8 @@ export function AddTankModal({ onClose, onSaved }: Props) {
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label>{t('tank.gallons')}</label>
-              <input type="number" value={form.gallons} onChange={e => setForm({ ...form, gallons: Number(e.target.value) })} required />
+              <label>{t('tank.liters')}</label>
+              <input type="number" value={form.liters} onChange={e => setForm({ ...form, liters: Number(e.target.value) })} required />
             </div>
             <div className="form-group">
               <label>{t('tank.type')}</label>

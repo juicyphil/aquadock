@@ -10,7 +10,7 @@
   "nav.settings": "Einstellungen",
 
   "tank.name": "Name",
-  "tank.gallons": "Liter",
+  "tank.liters": "Liter",
   "tank.type": "Typ",
   "tank.subtype": "Untertyp",
   "tank.setup_date": "Einrichtungsdatum",

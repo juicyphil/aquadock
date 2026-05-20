@@ -4,7 +4,7 @@ type Tank struct {
 	ID         int64  `json:"id"`
 	Name       string `json:"name"`
 	Emoji      string `json:"emoji"`
-	Gallons    float64 `json:"gallons"`
+	Liters    float64 `json:"liters"`
 	Type       string `json:"type"`
 	Subtype    string `json:"subtype"`
 	SetupDate  string `json:"setup_date"`
@@ -16,7 +16,7 @@ type Tank struct {
 type TankCreate struct {
 	Name       string  `json:"name"`
 	Emoji      string  `json:"emoji"`
-	Gallons    float64 `json:"gallons"`
+	Liters    float64 `json:"liters"`
 	Type       string  `json:"type"`
 	Subtype    string  `json:"subtype"`
 	SetupDate  string  `json:"setup_date"`
@@ -27,7 +27,7 @@ type TankCreate struct {
 type TankUpdate struct {
 	Name       *string  `json:"name"`
 	Emoji      *string  `json:"emoji"`
-	Gallons    *float64 `json:"gallons"`
+	Liters    *float64 `json:"liters"`
 	Type       *string  `json:"type"`
 	Subtype    *string  `json:"subtype"`
 	SetupDate  *string  `json:"setup_date"`

@@ -44,7 +44,7 @@ func (db *DB) Init() error {
 		user_id INTEGER NOT NULL DEFAULT 1 REFERENCES users(id),
 		name TEXT NOT NULL,
 		emoji TEXT NOT NULL DEFAULT '🐠',
-		gallons REAL NOT NULL,
+		liters REAL NOT NULL,
 		type TEXT NOT NULL CHECK(type IN ('freshwater','saltwater','coldwater')),
 		subtype TEXT,
 		setup_date TEXT NOT NULL,
