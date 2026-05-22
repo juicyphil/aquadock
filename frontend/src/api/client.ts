@@ -1,4 +1,4 @@
-import type { AuthResponse, DashboardResponse, Event, EventCreate, EventOccurrence, EventUpdate, Inhabitant, InhabitantCreate, Issue, IssueCreate, IssueUpdate, ParamRange, Tank, TankCreate, TankUpdate, WaterParam, WaterParamCreate, User } from '../types'
+import type { AuthResponse, DashboardResponse, Event, EventCreate, EventOccurrence, EventUpdate, Inhabitant, InhabitantCreate, Issue, IssueCreate, IssuePhoto, IssueUpdate, ParamRange, Tank, TankCreate, TankUpdate, WaterParam, WaterParamCreate, User } from '../types'
 
 const BASE = '/api'
 
@@ -110,6 +110,25 @@ export const api = {
       return data as { photo_url: string }
     })
   },
+
+  // Issue Photos (multiple)
+  listIssuePhotos: (issueId: number) => request<IssuePhoto[]>(`/issues/${issueId}/photos`),
+  uploadIssueExtraPhoto: (issueId: number, file: File, caption?: string) => {
+    const fd = new FormData()
+    fd.append('photo', file)
+    if (caption) fd.append('caption', caption)
+    const token = localStorage.getItem('aquadock_token')
+    return fetch(`${BASE}/issues/${issueId}/photos`, {
+      method: 'POST',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      body: fd,
+    }).then(async res => {
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
+      return data as IssuePhoto
+    })
+  },
+  deleteIssuePhoto: (photoId: number) => request<void>(`/issues/photos/${photoId}`, { method: 'DELETE' }),
 
   // Dashboard
   getDashboard: () => request<DashboardResponse>('/dashboard'),

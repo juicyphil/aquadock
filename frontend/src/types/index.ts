@@ -83,6 +83,14 @@ export interface IssueUpdate {
   resolved_at?: string | null
 }
 
+export interface IssuePhoto {
+  id: number
+  issue_id: number
+  photo_url: string
+  caption: string
+  created_at: string
+}
+
 export interface EventOccurrence extends Event {
   occurrence_date: string
   completed: boolean

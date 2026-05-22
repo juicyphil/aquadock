@@ -103,10 +103,15 @@ func main() {
 				r.Put("/", paramRangeHandler.Update)
 			})
 
-			r.Get("/issues/{id}", issueHandler.Get)
-			r.Put("/issues/{id}", issueHandler.Update)
-			r.Post("/issues/{id}/photo", issueHandler.UploadPhoto)
-			r.Delete("/issues/{id}", issueHandler.Delete)
+			r.Route("/issues", func(r chi.Router) {
+				r.Get("/{id}", issueHandler.Get)
+				r.Put("/{id}", issueHandler.Update)
+				r.Post("/{id}/photo", issueHandler.UploadPhoto)
+				r.Delete("/{id}", issueHandler.Delete)
+				r.Get("/{id}/photos", issueHandler.ListPhotos)
+				r.Post("/{id}/photos", issueHandler.UploadIssuePhoto)
+				r.Delete("/photos/{photoId}", issueHandler.DeletePhoto)
+			})
 
 			r.Get("/dashboard", dashboardHandler.Get)
 			r.Get("/planner", eventHandler.ListByDate)

@@ -121,6 +121,8 @@
   "issue.status": "Status",
   "issue.resolved_at": "Resolved At",
   "issue.edit": "Edit Issue",
+  "issue.add_photo": "Add Progress Photo",
+  "issue.photo_caption": "Caption",
 
   "onboarding.welcome_title": "Welcome to AquaDock!",
   "onboarding.welcome_desc": "Track your aquariums, schedule maintenance tasks, log water parameters, and document issues with photos — all in one place.",

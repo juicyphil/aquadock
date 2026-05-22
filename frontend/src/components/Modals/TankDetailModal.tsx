@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import type { Tank, Inhabitant, Event as EventType, Issue, IssueCreate, WaterParam } from '../../types'
+import type { Tank, Inhabitant, Event as EventType, Issue, IssueCreate, IssuePhoto, WaterParam } from '../../types'
 import { EVENT_TYPES, RECURRENCE_OPTIONS } from '../../types'
 import { api } from '../../api/client'
 import { useTranslation } from '../../i18n'
@@ -41,8 +41,11 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
   const [newIssue, setNewIssue] = useState({ title: '', description: '', observed_date: new Date().toISOString().slice(0, 10) })
   const [editingIssue, setEditingIssue] = useState<Issue | null>(null)
   const [viewingIssue, setViewingIssue] = useState<Issue | null>(null)
+  const [viewingIssuePhotos, setViewingIssuePhotos] = useState<IssuePhoto[]>([])
   const [editIssueForm, setEditIssueForm] = useState({ title: '', description: '', observed_date: '' })
   const [issuePhotoFile, setIssuePhotoFile] = useState<File | null>(null)
+  const [extraPhotoFile, setExtraPhotoFile] = useState<File | null>(null)
+  const [extraPhotoCaption, setExtraPhotoCaption] = useState('')
 
   const loadData = useCallback(async () => {
     try {
@@ -72,6 +75,12 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
       setPhotoPreview(URL.createObjectURL(file))
     }
   }
+
+  useEffect(() => {
+    if (viewingIssue) {
+      api.listIssuePhotos(viewingIssue.id).then(setViewingIssuePhotos).catch(() => setViewingIssuePhotos([]))
+    }
+  }, [viewingIssue])
 
   useEffect(() => {
     return () => {
@@ -651,21 +660,62 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
 
       {viewingIssue && (
         <div className="modal-overlay" onClick={() => setViewingIssue(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 500 }}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
             <h3>{viewingIssue.title}</h3>
-            {viewingIssue.photo_url && (
-              <img src={viewingIssue.photo_url} alt={viewingIssue.title}
-                style={{ width: '100%', maxHeight: 300, objectFit: 'contain', borderRadius: 8, marginBottom: '0.75rem', background: 'var(--surface3)' }} />
-            )}
             <div className="detail-grid">
               <div><strong>{tr('issue.date')}:</strong> {viewingIssue.observed_date}</div>
               <div><strong>{tr('issue.status')}:</strong> {viewingIssue.resolved_at ? '✅ Resolved' : '🔴 Open'}</div>
               {viewingIssue.resolved_at && <div><strong>{tr('issue.resolved_at')}:</strong> {viewingIssue.resolved_at}</div>}
             </div>
+
+            {viewingIssuePhotos.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.75rem' }}>
+                {viewingIssue.photo_url && (
+                  <img src={viewingIssue.photo_url} alt={viewingIssue.title}
+                    style={{ width: '100%', maxHeight: 250, objectFit: 'contain', borderRadius: 8, background: 'var(--surface3)' }} />
+                )}
+                {viewingIssuePhotos.map(ph => (
+                  <div key={ph.id} style={{ position: 'relative' }}>
+                    <img src={ph.photo_url} alt={ph.caption || ''}
+                      style={{ width: '100%', maxHeight: 250, objectFit: 'contain', borderRadius: 8, background: 'var(--surface3)' }} />
+                    {ph.caption && <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text2)', marginTop: '0.2rem' }}>{ph.caption}</span>}
+                    <button className="btn btn-sm btn-danger"
+                      style={{ position: 'absolute', top: 4, right: 4 }}
+                      onClick={async () => {
+                        await api.deleteIssuePhoto(ph.id)
+                        setViewingIssuePhotos(prev => prev.filter(p => p.id !== ph.id))
+                      }}>🗑️</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {viewingIssue.description && (
               <p style={{ marginTop: '0.75rem', color: 'var(--text2)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{viewingIssue.description}</p>
             )}
-            <div className="form-actions" style={{ marginTop: '1rem' }}>
+
+            <div style={{ marginTop: '0.75rem', padding: '0.5rem', background: 'var(--surface2)', borderRadius: 8 }}>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text2)' }}>{tr('issue.add_photo')}</label>
+              <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.3rem', alignItems: 'center' }}>
+                <input type="file" accept="image/*" onChange={e => setExtraPhotoFile(e.target.files?.[0] || null)} style={{ fontSize: '0.8rem', flex: 1 }} />
+                <input type="text" placeholder={tr('issue.photo_caption')} value={extraPhotoCaption}
+                  onChange={e => setExtraPhotoCaption(e.target.value)} style={{ fontSize: '0.8rem', width: 120 }} />
+                <button className="btn btn-sm btn-primary" disabled={!extraPhotoFile}
+                  onClick={async () => {
+                    if (!extraPhotoFile) return
+                    try {
+                      await api.uploadIssueExtraPhoto(viewingIssue.id, extraPhotoFile, extraPhotoCaption)
+                      const photos = await api.listIssuePhotos(viewingIssue.id)
+                      setViewingIssuePhotos(photos)
+                      setExtraPhotoFile(null)
+                      setExtraPhotoCaption('')
+                      loadData()
+                    } catch (err: any) { toast(err.message, 'error') }
+                  }}>+</button>
+              </div>
+            </div>
+
+            <div className="form-actions" style={{ marginTop: '0.75rem' }}>
               {!viewingIssue.resolved_at && (
                 <button className="btn btn-primary" onClick={() => { handleResolveIssue(viewingIssue); setViewingIssue(null) }}>{tr('issue.resolve')}</button>
               )}

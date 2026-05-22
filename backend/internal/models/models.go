@@ -197,6 +197,19 @@ type IssueUpdate struct {
 	ResolvedAt   *string `json:"resolved_at"`
 }
 
+type IssuePhoto struct {
+	ID        int64  `json:"id"`
+	IssueID   int64  `json:"issue_id"`
+	PhotoURL  string `json:"photo_url"`
+	Caption   string `json:"caption"`
+	CreatedAt string `json:"created_at"`
+}
+
+type IssuePhotoUpload struct {
+	IssueID int64  `json:"issue_id"`
+	Caption string `json:"caption"`
+}
+
 type EventUpdate struct {
 	Type          *string `json:"type"`
 	Title         *string `json:"title"`

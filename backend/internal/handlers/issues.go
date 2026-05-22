@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"aquadock/internal/models"
 
@@ -23,6 +24,10 @@ type IssueHandler struct {
 		UpdateIssue(int64, *models.IssueUpdate) (*models.Issue, error)
 		UpdateIssuePhoto(int64, string) error
 		DeleteIssue(int64) error
+		CreateIssuePhoto(int64, string, string) (*models.IssuePhoto, error)
+		GetIssuePhoto(int64) (*models.IssuePhoto, error)
+		ListIssuePhotos(int64) ([]models.IssuePhoto, error)
+		DeleteIssuePhoto(int64) error
 	}
 	photoDir string
 }
@@ -34,6 +39,10 @@ func NewIssueHandler(db interface {
 	UpdateIssue(int64, *models.IssueUpdate) (*models.Issue, error)
 	UpdateIssuePhoto(int64, string) error
 	DeleteIssue(int64) error
+	CreateIssuePhoto(int64, string, string) (*models.IssuePhoto, error)
+	GetIssuePhoto(int64) (*models.IssuePhoto, error)
+	ListIssuePhotos(int64) ([]models.IssuePhoto, error)
+	DeleteIssuePhoto(int64) error
 }, photoDir string) *IssueHandler {
 	return &IssueHandler{db: db, photoDir: photoDir}
 }
@@ -198,6 +207,107 @@ func (h *IssueHandler) ServePhoto(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.ServeFile(w, r, filePath)
+}
+
+func (h *IssueHandler) ListPhotos(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, 400, "invalid issue id")
+		return
+	}
+	photos, err := h.db.ListIssuePhotos(id)
+	if err != nil {
+		writeError(w, 500, "failed to list photos")
+		return
+	}
+	if photos == nil {
+		photos = []models.IssuePhoto{}
+	}
+	writeJSON(w, 200, photos)
+}
+
+func (h *IssueHandler) UploadIssuePhoto(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, 400, "invalid issue id")
+		return
+	}
+	issue, err := h.db.GetIssue(id)
+	if err != nil || issue == nil {
+		writeError(w, 404, "issue not found")
+		return
+	}
+
+	caption := r.FormValue("caption")
+
+	r.ParseMultipartForm(5 << 20)
+	file, header, err := r.FormFile("photo")
+	if err != nil {
+		writeError(w, 400, "no photo file provided")
+		return
+	}
+	defer file.Close()
+
+	ext := strings.ToLower(filepath.Ext(header.Filename))
+	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".webp" && ext != ".gif" {
+		writeError(w, 400, "only .jpg, .png, .webp and .gif files allowed")
+		return
+	}
+
+	if err := os.MkdirAll(h.photoDir, 0755); err != nil {
+		writeError(w, 500, "error creating photo directory")
+		return
+	}
+
+	filename := fmt.Sprintf("issue_%d_photo_%d%s", id, time.Now().UnixNano(), ext)
+	destPath := filepath.Join(h.photoDir, filename)
+
+	dst, err := os.Create(destPath)
+	if err != nil {
+		writeError(w, 500, "error saving photo")
+		return
+	}
+	defer dst.Close()
+
+	if _, err := io.Copy(dst, file); err != nil {
+		dst.Close()
+		os.Remove(destPath)
+		writeError(w, 500, "error saving photo")
+		return
+	}
+
+	photoURL := "/api/issues/photos/" + filename
+	photo, err := h.db.CreateIssuePhoto(id, photoURL, caption)
+	if err != nil {
+		os.Remove(destPath)
+		writeError(w, 500, "error saving photo record")
+		return
+	}
+
+	writeJSON(w, 201, photo)
+}
+
+func (h *IssueHandler) DeletePhoto(w http.ResponseWriter, r *http.Request) {
+	photoID, err := strconv.ParseInt(chi.URLParam(r, "photoId"), 10, 64)
+	if err != nil || photoID <= 0 {
+		writeError(w, 400, "invalid photo id")
+		return
+	}
+
+	photo, err := h.db.GetIssuePhoto(photoID)
+	if err != nil || photo == nil {
+		writeError(w, 404, "photo not found")
+		return
+	}
+
+	filename := strings.TrimPrefix(photo.PhotoURL, "/api/issues/photos/")
+	os.Remove(filepath.Join(h.photoDir, filename))
+
+	if err := h.db.DeleteIssuePhoto(photoID); err != nil {
+		writeError(w, 500, "failed to delete photo")
+		return
+	}
+	w.WriteHeader(204)
 }
 
 func (h *IssueHandler) Delete(w http.ResponseWriter, r *http.Request) {

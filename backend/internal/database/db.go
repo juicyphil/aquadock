@@ -109,6 +109,14 @@ func (db *DB) Init() error {
 		updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 	);
 
+	CREATE TABLE IF NOT EXISTS issue_photos (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		issue_id INTEGER NOT NULL REFERENCES issues(id) ON DELETE CASCADE,
+		photo_url TEXT NOT NULL,
+		caption TEXT NOT NULL DEFAULT '',
+		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	);
+
 	CREATE TABLE IF NOT EXISTS water_params (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		tank_id INTEGER NOT NULL REFERENCES tanks(id) ON DELETE CASCADE,

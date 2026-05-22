@@ -70,6 +70,50 @@ func (db *DB) DeleteIssue(id int64) error {
 	return err
 }
 
+func (db *DB) CreateIssuePhoto(issueID int64, photoURL, caption string) (*models.IssuePhoto, error) {
+	res, err := db.Exec("INSERT INTO issue_photos (issue_id, photo_url, caption) VALUES (?, ?, ?)", issueID, photoURL, caption)
+	if err != nil {
+		return nil, fmt.Errorf("create issue photo: %w", err)
+	}
+	id, _ := res.LastInsertId()
+	return db.GetIssuePhoto(id)
+}
+
+func (db *DB) GetIssuePhoto(id int64) (*models.IssuePhoto, error) {
+	var p models.IssuePhoto
+	err := db.QueryRow("SELECT id, issue_id, photo_url, COALESCE(caption,''), created_at FROM issue_photos WHERE id = ?", id).
+		Scan(&p.ID, &p.IssueID, &p.PhotoURL, &p.Caption, &p.CreatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("get issue photo: %w", err)
+	}
+	return &p, nil
+}
+
+func (db *DB) ListIssuePhotos(issueID int64) ([]models.IssuePhoto, error) {
+	rows, err := db.Query("SELECT id, issue_id, photo_url, COALESCE(caption,''), created_at FROM issue_photos WHERE issue_id = ? ORDER BY created_at", issueID)
+	if err != nil {
+		return nil, fmt.Errorf("list issue photos: %w", err)
+	}
+	defer rows.Close()
+	var photos []models.IssuePhoto
+	for rows.Next() {
+		var p models.IssuePhoto
+		if err := rows.Scan(&p.ID, &p.IssueID, &p.PhotoURL, &p.Caption, &p.CreatedAt); err != nil {
+			return nil, fmt.Errorf("scan issue photo: %w", err)
+		}
+		photos = append(photos, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows issue photo: %w", err)
+	}
+	return photos, nil
+}
+
+func (db *DB) DeleteIssuePhoto(id int64) error {
+	_, err := db.Exec("DELETE FROM issue_photos WHERE id = ?", id)
+	return err
+}
+
 func scanIssues(rows Rows) ([]models.Issue, error) {
 	var issues []models.Issue
 	for rows.Next() {
