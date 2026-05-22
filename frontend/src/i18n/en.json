@@ -118,6 +118,8 @@
   "issue.no_issues": "No issues logged.",
   "issue.resolve": "Resolve",
   "issue.resolved": "Resolved",
+  "issue.status": "Status",
+  "issue.resolved_at": "Resolved At",
   "issue.edit": "Edit Issue",
 
   "onboarding.welcome_title": "Welcome to AquaDock!",

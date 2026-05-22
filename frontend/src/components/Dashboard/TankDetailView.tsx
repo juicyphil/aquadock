@@ -40,6 +40,7 @@ export function TankDetailView({ tank, onUpdated, onDelete }: Props) {
   const [showAddIssue, setShowAddIssue] = useState(false)
   const [newIssue, setNewIssue] = useState({ title: '', description: '', observed_date: new Date().toISOString().slice(0, 10) })
   const [editingIssue, setEditingIssue] = useState<Issue | null>(null)
+  const [viewingIssue, setViewingIssue] = useState<Issue | null>(null)
   const [editIssueForm, setEditIssueForm] = useState({ title: '', description: '', observed_date: '' })
   const [issuePhotoFile, setIssuePhotoFile] = useState<File | null>(null)
 
@@ -494,14 +495,14 @@ export function TankDetailView({ tank, onUpdated, onDelete }: Props) {
             ) : (
               <div className="event-list">
                 {issues.map(iss => (
-                  <div key={iss.id} className={`event-card ${iss.resolved_at ? 'completed' : ''}`}>
+                  <div key={iss.id} className={`event-card ${iss.resolved_at ? 'completed' : ''}`} style={{ cursor: 'pointer' }} onClick={() => setViewingIssue(iss)}>
                     {iss.photo_url && <img src={iss.photo_url} alt={iss.title} className="issue-thumb" />}
                     <div className="event-info">
                       <span className="event-title">{iss.title}</span>
                       <span className="event-date">{iss.observed_date}</span>
                       {iss.description && <span className="event-note">{iss.description}</span>}
                     </div>
-                    <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }} onClick={e => e.stopPropagation()}>
                       {!iss.resolved_at && (
                         <button className="btn btn-sm btn-primary" onClick={() => handleResolveIssue(iss)}>{tr('issue.resolve')}</button>
                       )}
@@ -689,6 +690,34 @@ export function TankDetailView({ tank, onUpdated, onDelete }: Props) {
       {showLightbox && tank.photo_url && (
         <div className="lightbox-overlay" onClick={() => setShowLightbox(false)}>
           <img className="lightbox-image" src={tank.photo_url} alt={tank.name} />
+        </div>
+      )}
+
+      {/* Issue Detail View */}
+      {viewingIssue && (
+        <div className="modal-overlay" onClick={() => setViewingIssue(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 500 }}>
+            <h3>{viewingIssue.title}</h3>
+            {viewingIssue.photo_url && (
+              <img src={viewingIssue.photo_url} alt={viewingIssue.title}
+                style={{ width: '100%', maxHeight: 300, objectFit: 'contain', borderRadius: 8, marginBottom: '0.75rem', background: 'var(--surface3)' }} />
+            )}
+            <div className="detail-grid">
+              <div><strong>{tr('issue.date')}:</strong> {viewingIssue.observed_date}</div>
+              <div><strong>{tr('issue.status')}:</strong> {viewingIssue.resolved_at ? '✅ Resolved' : '🔴 Open'}</div>
+              {viewingIssue.resolved_at && <div><strong>{tr('issue.resolved_at')}:</strong> {viewingIssue.resolved_at}</div>}
+            </div>
+            {viewingIssue.description && (
+              <p style={{ marginTop: '0.75rem', color: 'var(--text2)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{viewingIssue.description}</p>
+            )}
+            <div className="form-actions" style={{ marginTop: '1rem' }}>
+              {!viewingIssue.resolved_at && (
+                <button className="btn btn-primary" onClick={() => { handleResolveIssue(viewingIssue); setViewingIssue(null) }}>{tr('issue.resolve')}</button>
+              )}
+              <button className="btn btn-secondary" onClick={() => { setEditingIssue(viewingIssue); setEditIssueForm({ title: viewingIssue.title, description: viewingIssue.description, observed_date: viewingIssue.observed_date }); setViewingIssue(null) }}>{tr('tank.edit')}</button>
+              <button className="btn btn-text" onClick={() => setViewingIssue(null)}>{tr('common.close')}</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
