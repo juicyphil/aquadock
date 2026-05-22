@@ -56,7 +56,11 @@ func (h *IssueHandler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *IssueHandler) Create(w http.ResponseWriter, r *http.Request) {
-	tankID, _ := strconv.ParseInt(chi.URLParam(r, "tankId"), 10, 64)
+	tankID, err := strconv.ParseInt(chi.URLParam(r, "tankId"), 10, 64)
+	if err != nil || tankID <= 0 {
+		writeError(w, 400, "invalid tank id")
+		return
+	}
 	var req models.IssueCreate
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, 400, "invalid request")

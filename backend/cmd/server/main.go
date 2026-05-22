@@ -48,6 +48,7 @@ func main() {
 			w.Write([]byte(`{"status":"ok"}`))
 		})
 		r.Get("/tanks/photos/{filename}", photoHandler.Serve)
+		r.Get("/issues/photos/{filename}", issueHandler.ServePhoto)
 		r.Post("/auth/register", authHandler.Register)
 		r.Post("/auth/login", authHandler.Login)
 		r.With(handlers.JWTAuth(cfg.JWTSecret)).Get("/auth/status", authHandler.Status)
@@ -102,7 +103,6 @@ func main() {
 				r.Put("/", paramRangeHandler.Update)
 			})
 
-			r.Get("/issues/photos/{filename}", issueHandler.ServePhoto)
 			r.Get("/issues/{id}", issueHandler.Get)
 			r.Put("/issues/{id}", issueHandler.Update)
 			r.Post("/issues/{id}/photo", issueHandler.UploadPhoto)
