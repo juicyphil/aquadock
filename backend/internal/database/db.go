@@ -160,23 +160,29 @@ func (db *DB) Init() error {
 }
 
 func (db *DB) seedDemoUser() error {
-	var count int
-	err := db.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
-	if err != nil || count > 0 {
-		return err
-	}
-
 	hash, err := bcrypt.GenerateFromPassword([]byte("demo123"), bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("hash demo password: %w", err)
 	}
-	res, err := db.Exec("INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
+	_, err = db.Exec("INSERT OR IGNORE INTO users (username, email, password_hash) VALUES (?, ?, ?)",
 		"demo", "demo@aquadock.local", string(hash))
 	if err != nil {
 		return fmt.Errorf("create demo user: %w", err)
 	}
-	userID, _ := res.LastInsertId()
-	log.Printf("created demo user id=%d (username=demo, password=demo123)", userID)
+
+	var userID int64
+	err = db.QueryRow("SELECT id FROM users WHERE username = ?", "demo").Scan(&userID)
+	if err != nil {
+		return fmt.Errorf("find demo user: %w", err)
+	}
+
+	var tankCount int
+	db.QueryRow("SELECT COUNT(*) FROM tanks WHERE user_id = ?", userID).Scan(&tankCount)
+	if tankCount > 0 {
+		return nil
+	}
+
+	log.Printf("seeding demo data for user id=%d", userID)
 
 	tracked := "ammonia,nitrite,nitrate,ph,temperature,gh,kh"
 	setupDate := time.Now().AddDate(0, -3, 0).Format("2006-01-02")
@@ -214,7 +220,7 @@ func (db *DB) seedDemoUser() error {
 	}
 
 	for i := 0; i < 8; i++ {
-		day := time.Now().AddDate(0, 0, -(7 - i)*3)
+		day := time.Now().AddDate(0, 0, -(7-i)*3)
 		_, err := db.Exec(`INSERT INTO water_params (tank_id, tested_at, ammonia, nitrite, nitrate, ph, temperature, notes)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 			tankID, day.Format("2006-01-02 15:04:05"),
