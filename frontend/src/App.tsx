@@ -3,9 +3,11 @@ import { Header } from './components/Layout/Header'
 import { useAuth } from './components/Auth/AuthContext'
 import { LoginModal } from './components/Auth/LoginModal'
 import { RegisterModal } from './components/Auth/RegisterModal'
+import { useTranslation, LANG_LABELS, type Lang } from './i18n'
 import { DashboardView } from './components/Dashboard/Dashboard'
 import { TankListView } from './components/Tanks/TankList'
 import { PlannerView } from './components/Planner/Planner'
+import { OnboardingWizard } from './components/Onboarding/OnboardingWizard'
 import { AddTankModal } from './components/Modals/AddTankModal'
 import { TankDetailModal } from './components/Modals/TankDetailModal'
 import { SettingsModal } from './components/Modals/SettingsModal'
@@ -25,6 +27,7 @@ function loadMode(): 'detail' | 'overview' {
 export default function App() {
   const { user, loading: authLoading } = useAuth()
   const { toast } = useToast()
+  const { t, lang, setLang } = useTranslation()
 
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard')
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null)
@@ -39,6 +42,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [dashboardMode, setDashboardMode] = useState<'detail' | 'overview'>(loadMode)
   const [selectedTankId, setSelectedTankId] = useState<number | null>(null)
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   const selectedTankForDashboard = dashboard?.tanks.find(t => t.id === selectedTankId) ?? dashboard?.tanks[0] ?? null
 
@@ -51,6 +55,9 @@ export default function App() {
       ])
       setTanks(tanksData)
       setDashboard(dashData)
+      if (tanksData.length === 0 && !localStorage.getItem('aquadock_onboarded')) {
+        setShowOnboarding(true)
+      }
     } catch (err: any) {
       toast(err.message || 'Failed to load data', 'error')
     } finally {
@@ -84,6 +91,12 @@ export default function App() {
     }
   }, [dashboard, selectedTankId])
 
+  useEffect(() => {
+    if (!authLoading && user && !loading && tanks.length === 0 && !localStorage.getItem('aquadock_onboarded')) {
+      setShowOnboarding(true)
+    }
+  }, [user, authLoading, loading, tanks])
+
   const handleDashboardModeChange = (mode: 'detail' | 'overview') => {
     setDashboardMode(mode)
     localStorage.setItem('aquadock_dashboard_mode', mode)
@@ -112,9 +125,17 @@ export default function App() {
         <div className="auth-hero">
           <h1>🐠 AquaDock</h1>
           <p>Aquarium Management & Planner</p>
+          <div className="lang-selector" style={{ display: 'flex', gap: '0.3rem', justifyContent: 'center', marginBottom: '1rem' }}>
+            {(Object.keys(LANG_LABELS) as Lang[]).map(l => (
+              <button key={l} className={`btn btn-sm ${lang === l ? 'btn-primary' : 'btn-text'}`}
+                onClick={() => setLang(l)} style={{ fontSize: '0.8rem' }}>
+                {LANG_LABELS[l]}
+              </button>
+            ))}
+          </div>
           <div className="auth-buttons">
-            <button className="btn btn-primary" onClick={() => setShowLogin(true)}>Login</button>
-            <button className="btn btn-secondary" onClick={() => setShowRegister(true)}>Register</button>
+            <button className="btn btn-primary" onClick={() => setShowLogin(true)}>{t('nav.login')}</button>
+            <button className="btn btn-secondary" onClick={() => setShowRegister(true)}>{t('nav.register')}</button>
           </div>
         </div>
         {showLogin && <LoginModal onClose={() => setShowLogin(false)} onSwitch={() => { setShowLogin(false); setShowRegister(true) }} />}
@@ -183,6 +204,10 @@ export default function App() {
           dashboardMode={dashboardMode}
           onDashboardModeChange={handleDashboardModeChange}
         />
+      )}
+
+      {showOnboarding && (
+        <OnboardingWizard onComplete={() => { setShowOnboarding(false); reloadTanks() }} />
       )}
     </div>
   )

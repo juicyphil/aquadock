@@ -1,9 +1,18 @@
 import React, { createContext, useContext, useState, useCallback } from 'react'
 import en from './en.json'
 import de from './de.json'
+import ja from './ja.json'
+import nl from './nl.json'
 
-type Lang = 'en' | 'de'
-const messages: Record<Lang, Record<string, string>> = { en, de }
+export type Lang = 'en' | 'de' | 'ja' | 'nl'
+const messages: Record<Lang, Record<string, string>> = { en, de, ja, nl }
+
+const LANG_LABELS: Record<Lang, string> = {
+  en: 'English',
+  de: 'Deutsch',
+  ja: '日本語',
+  nl: 'Nederlands',
+}
 
 interface LangContextType {
   lang: Lang
@@ -47,3 +56,5 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
 export function useTranslation() {
   return useContext(LangContext)
 }
+
+export { LANG_LABELS }

@@ -16,7 +16,7 @@ interface HeaderProps {
 export function Header({ viewMode, setViewMode, onAddTank, onSettings, dashboardMode, onSetDashboardMode, totalTanks = 0 }: HeaderProps) {
   const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
-  const { lang, setLang, t } = useTranslation()
+  const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
 
   const themes = ['light', 'dark', 'ocean', 'reef', 'pond'] as const
@@ -55,9 +55,6 @@ export function Header({ viewMode, setViewMode, onAddTank, onSettings, dashboard
       <div className="header-right">
         <button className="icon-btn" onClick={onAddTank} title={t('nav.add_tank')}>➕</button>
         <button className="icon-btn" onClick={onSettings} title={t('nav.settings')}>⚙️</button>
-        <button className="icon-btn" onClick={() => setLang(lang === 'en' ? 'de' : 'en')} title="Language">
-          {lang.toUpperCase()}
-        </button>
         <button className="icon-btn" onClick={() => {
           const idx = themes.indexOf(theme)
           setTheme(themes[(idx + 1) % themes.length])

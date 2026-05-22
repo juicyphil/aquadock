@@ -49,12 +49,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = useCallback(async (username: string, email: string, password: string) => {
     const res = await api.register(username, email, password)
     localStorage.setItem('aquadock_token', res.token)
+    localStorage.removeItem('aquadock_onboarded')
     setToken(res.token)
     setUser(res.user)
   }, [])
 
   const logout = useCallback(() => {
     localStorage.removeItem('aquadock_token')
+    localStorage.removeItem('aquadock_onboarded')
     setToken(null)
     setUser(null)
   }, [])

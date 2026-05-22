@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import type { ParamRange } from '../../types'
 import { api } from '../../api/client'
 import { useTheme } from '../../theme'
-import { useTranslation } from '../../i18n'
+import { useTranslation, LANG_LABELS, type Lang } from '../../i18n'
 import { useToast } from '../UI/Toast'
 import { useAuth } from '../Auth/AuthContext'
 
@@ -15,7 +15,7 @@ interface Props {
 type Tab = 'profile' | 'params' | 'theme' | 'dashboard'
 
 export function SettingsModal({ onClose, dashboardMode, onDashboardModeChange }: Props) {
-  const { t } = useTranslation()
+  const { t, lang, setLang } = useTranslation()
   const { toast } = useToast()
   const { theme, setTheme } = useTheme()
   const { user, logout } = useAuth()
@@ -71,7 +71,20 @@ export function SettingsModal({ onClose, dashboardMode, onDashboardModeChange }:
             <div>
               <p><strong>{t('settings.username')}:</strong> {user?.username}</p>
               <p><strong>{t('settings.email')}:</strong> {user?.email}</p>
-              <button className="btn btn-danger" onClick={() => { logout(); onClose() }}>{t('nav.logout')}</button>
+              <div style={{ marginTop: '1rem' }}>
+                <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.5rem' }}>{t('nav.language')}</label>
+                <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                  {(Object.keys(LANG_LABELS) as Lang[]).map(l => (
+                    <button key={l} className={`btn btn-sm ${lang === l ? 'btn-primary' : 'btn-text'}`}
+                      onClick={() => setLang(l)}>
+                      {LANG_LABELS[l]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ marginTop: '1rem' }}>
+                <button className="btn btn-danger" onClick={() => { logout(); onClose() }}>{t('nav.logout')}</button>
+              </div>
             </div>
           )}
 
