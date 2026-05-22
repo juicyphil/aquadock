@@ -87,11 +87,17 @@ func (h *EventHandler) expandRecurring(event models.Event, rangeStart, rangeEnd 
 }
 
 func (h *EventHandler) Create(w http.ResponseWriter, r *http.Request) {
+	tankID, err := strconv.ParseInt(chi.URLParam(r, "tankId"), 10, 64)
+	if err != nil || tankID <= 0 {
+		writeError(w, 400, "invalid tank id")
+		return
+	}
 	var req models.EventCreate
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, 400, "invalid request")
 		return
 	}
+	req.TankID = tankID
 	if req.ScheduledDate == "" {
 		req.ScheduledDate = time.Now().UTC().Format("2006-01-02")
 	}
@@ -109,7 +115,11 @@ func (h *EventHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *EventHandler) ListByTank(w http.ResponseWriter, r *http.Request) {
-	tankID, _ := strconv.ParseInt(chi.URLParam(r, "tankId"), 10, 64)
+	tankID, err := strconv.ParseInt(chi.URLParam(r, "tankId"), 10, 64)
+	if err != nil || tankID <= 0 {
+		writeError(w, 400, "invalid tank id")
+		return
+	}
 	events, err := h.db.ListEventsByTank(tankID, 50)
 	if err != nil {
 		writeError(w, 500, "failed to list events")
@@ -192,7 +202,11 @@ func (h *EventHandler) ListRange(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *EventHandler) ListUpcoming(w http.ResponseWriter, r *http.Request) {
-	tankID, _ := strconv.ParseInt(chi.URLParam(r, "tankId"), 10, 64)
+	tankID, err := strconv.ParseInt(chi.URLParam(r, "tankId"), 10, 64)
+	if err != nil || tankID <= 0 {
+		writeError(w, 400, "invalid tank id")
+		return
+	}
 	limitStr := r.URL.Query().Get("limit")
 	limit := 5
 	if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
@@ -247,7 +261,11 @@ func (h *EventHandler) ListOverdue(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *EventHandler) Complete(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, 400, "invalid event id")
+		return
+	}
 
 	event, err := h.db.GetEvent(id)
 	if err != nil {
@@ -277,7 +295,11 @@ func (h *EventHandler) Complete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *EventHandler) Skip(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, 400, "invalid event id")
+		return
+	}
 
 	event, err := h.db.GetEvent(id)
 	if err != nil {
@@ -309,7 +331,11 @@ func (h *EventHandler) Skip(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *EventHandler) Reschedule(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, 400, "invalid event id")
+		return
+	}
 	var req struct {
 		Date string `json:"date"`
 		Time string `json:"time"`
@@ -326,7 +352,11 @@ func (h *EventHandler) Reschedule(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *EventHandler) Update(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, 400, "invalid event id")
+		return
+	}
 	var req models.EventUpdate
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, 400, "invalid request")

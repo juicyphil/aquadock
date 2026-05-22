@@ -13,7 +13,7 @@ import { TankDetailModal } from './components/Modals/TankDetailModal'
 import { SettingsModal } from './components/Modals/SettingsModal'
 import { useToast } from './components/UI/Toast'
 import { api } from './api/client'
-import type { Tank, Event, WaterParam, DashboardResponse } from './types'
+import type { Tank, DashboardResponse } from './types'
 import './App.css'
 
 type ViewMode = 'dashboard' | 'planner' | 'tanks'
@@ -32,8 +32,6 @@ export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard')
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null)
   const [tanks, setTanks] = useState<Tank[]>([])
-  const [events, setEvents] = useState<Event[]>([])
-  const [params, setParams] = useState<WaterParam[]>([])
   const [selectedTank, setSelectedTank] = useState<Tank | null>(null)
   const [showAddTank, setShowAddTank] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -109,7 +107,7 @@ export default function App() {
       await api.deleteTank(selectedTankForDashboard.id)
       toast('Tank deleted', 'success')
       setSelectedTankId(null)
-      reloadTanks()
+      await reloadTanks()
     } catch (err: any) {
       toast(err.message, 'error')
     }

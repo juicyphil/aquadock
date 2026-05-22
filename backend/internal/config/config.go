@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 
@@ -53,7 +54,7 @@ func Load() *Config {
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
-		jwtSecret = "change-me-to-a-random-secret"
+		log.Fatal("JWT_SECRET environment variable is required")
 	}
 
 	photoDir := os.Getenv("PHOTO_DIR")

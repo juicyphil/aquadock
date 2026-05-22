@@ -31,7 +31,11 @@ func NewInhabitantHandler(db interface {
 }
 
 func (h *InhabitantHandler) List(w http.ResponseWriter, r *http.Request) {
-	tankID, _ := strconv.ParseInt(chi.URLParam(r, "tankId"), 10, 64)
+	tankID, err := strconv.ParseInt(chi.URLParam(r, "tankId"), 10, 64)
+	if err != nil || tankID <= 0 {
+		writeError(w, 400, "invalid tank id")
+		return
+	}
 	inhabs, err := h.db.ListInhabitants(tankID)
 	if err != nil {
 		writeError(w, 500, "failed to list inhabitants")
@@ -44,11 +48,17 @@ func (h *InhabitantHandler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *InhabitantHandler) Create(w http.ResponseWriter, r *http.Request) {
+	tankID, err := strconv.ParseInt(chi.URLParam(r, "tankId"), 10, 64)
+	if err != nil || tankID <= 0 {
+		writeError(w, 400, "invalid tank id")
+		return
+	}
 	var req models.InhabitantCreate
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, 400, "invalid request")
 		return
 	}
+	req.TankID = tankID
 	if req.Emoji == "" {
 		req.Emoji = "🐟"
 	}
@@ -65,12 +75,17 @@ func (h *InhabitantHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *InhabitantHandler) Update(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, 400, "invalid inhabitant id")
+		return
+	}
 	var req models.Inhabitant
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, 400, "invalid request")
 		return
 	}
+	req.TankID = 0
 	inhab, err := h.db.UpdateInhabitant(id, &req)
 	if err != nil {
 		writeError(w, 500, "failed to update inhabitant")
@@ -80,7 +95,11 @@ func (h *InhabitantHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *InhabitantHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, 400, "invalid inhabitant id")
+		return
+	}
 	if err := h.db.DeleteInhabitant(id); err != nil {
 		writeError(w, 500, "failed to delete inhabitant")
 		return

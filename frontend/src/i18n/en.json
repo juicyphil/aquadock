@@ -26,6 +26,7 @@
   "tank.delete_confirm": "Delete this tank?",
 
   "inhabitant.name": "Name",
+  "inhabitant.plural_name": "Inhabitants",
   "inhabitant.species": "Species",
   "inhabitant.count": "Count",
   "inhabitant.add": "Add Inhabitant",
@@ -151,5 +152,8 @@
   "macroalgae": "Macroalgae",
   "goldfish": "Goldfish",
   "pond": "Pond",
-  "temperate": "Temperate"
+  "temperate": "Temperate",
+  "diagram.nitrogen_cycle": "Nitrogen Cycle",
+  "diagram.param_status": "Parameter Status",
+  "diagram.safe_range": "Safe Range"
 }

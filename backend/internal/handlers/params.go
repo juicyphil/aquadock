@@ -37,11 +37,17 @@ func NewParamHandler(db interface {
 }
 
 func (h *ParamHandler) Create(w http.ResponseWriter, r *http.Request) {
+	tankID, err := strconv.ParseInt(chi.URLParam(r, "tankId"), 10, 64)
+	if err != nil || tankID <= 0 {
+		writeError(w, 400, "invalid tank id")
+		return
+	}
 	var req models.WaterParamCreate
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, 400, "invalid request")
 		return
 	}
+	req.TankID = tankID
 	param, err := h.db.CreateWaterParam(&req)
 	if err != nil {
 		writeError(w, 500, "failed to create water param")
@@ -51,7 +57,11 @@ func (h *ParamHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ParamHandler) List(w http.ResponseWriter, r *http.Request) {
-	tankID, _ := strconv.ParseInt(chi.URLParam(r, "tankId"), 10, 64)
+	tankID, err := strconv.ParseInt(chi.URLParam(r, "tankId"), 10, 64)
+	if err != nil || tankID <= 0 {
+		writeError(w, 400, "invalid tank id")
+		return
+	}
 	params, err := h.db.ListWaterParams(tankID, 30)
 	if err != nil {
 		writeError(w, 500, "failed to list params")
@@ -64,7 +74,11 @@ func (h *ParamHandler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ParamHandler) Latest(w http.ResponseWriter, r *http.Request) {
-	tankID, _ := strconv.ParseInt(chi.URLParam(r, "tankId"), 10, 64)
+	tankID, err := strconv.ParseInt(chi.URLParam(r, "tankId"), 10, 64)
+	if err != nil || tankID <= 0 {
+		writeError(w, 400, "invalid tank id")
+		return
+	}
 	param, err := h.db.GetLatestWaterParam(tankID)
 	if err != nil {
 		writeJSON(w, 200, nil)
@@ -74,7 +88,11 @@ func (h *ParamHandler) Latest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ParamHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, 400, "invalid param id")
+		return
+	}
 	if err := h.db.DeleteWaterParam(id); err != nil {
 		writeError(w, 500, "failed to delete param")
 		return

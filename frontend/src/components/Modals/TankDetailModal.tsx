@@ -5,6 +5,7 @@ import { api } from '../../api/client'
 import { useTranslation } from '../../i18n'
 import { useToast } from '../UI/Toast'
 import { ParamChart } from '../Charts/ParamChart'
+import { WaterParamDiagram } from '../Charts/WaterParamDiagram'
 
 interface Props {
   tank: Tank
@@ -35,6 +36,7 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
   const [editingEvent, setEditingEvent] = useState<EventType | null>(null)
   const [editEventForm, setEditEventForm] = useState({ type: '', title: '', date: '', time: '', recurrence: '', note: '' })
   const [issues, setIssues] = useState<Issue[]>([])
+  const [paramRanges, setParamRanges] = useState<any[]>([])
   const [showAddIssue, setShowAddIssue] = useState(false)
   const [newIssue, setNewIssue] = useState({ title: '', description: '', observed_date: new Date().toISOString().slice(0, 10) })
   const [editingIssue, setEditingIssue] = useState<Issue | null>(null)
@@ -53,8 +55,12 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
       setEvents(evts)
       setParams(prms)
       setIssues(iss)
-    } catch {}
-  }, [tank.id])
+      const ranges = await api.listParamRanges()
+      setParamRanges(ranges)
+    } catch (err) {
+      toast('Failed to load tank data', 'error')
+    }
+  }, [tank.id, toast])
 
   useEffect(() => { loadData() }, [loadData])
 
@@ -65,6 +71,12 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
       setPhotoPreview(URL.createObjectURL(file))
     }
   }
+
+  useEffect(() => {
+    return () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview)
+    }
+  }, [photoPreview])
 
   const handleAddInhabitant = async () => {
     try {
@@ -202,13 +214,13 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
   const handleLogParam = async () => {
     try {
       const data: any = { tank_id: tank.id }
-      if (newParam.ammonia) data.ammonia = parseFloat(newParam.ammonia)
-      if (newParam.nitrite) data.nitrite = parseFloat(newParam.nitrite)
-      if (newParam.nitrate) data.nitrate = parseFloat(newParam.nitrate)
-      if (newParam.ph) data.ph = parseFloat(newParam.ph)
-      if (newParam.temperature) data.temperature = parseFloat(newParam.temperature)
-      if (newParam.gh) data.gh = parseFloat(newParam.gh)
-      if (newParam.kh) data.kh = parseFloat(newParam.kh)
+      if (newParam.ammonia !== '' && newParam.ammonia != null) data.ammonia = parseFloat(newParam.ammonia)
+      if (newParam.nitrite !== '' && newParam.nitrite != null) data.nitrite = parseFloat(newParam.nitrite)
+      if (newParam.nitrate !== '' && newParam.nitrate != null) data.nitrate = parseFloat(newParam.nitrate)
+      if (newParam.ph !== '' && newParam.ph != null) data.ph = parseFloat(newParam.ph)
+      if (newParam.temperature !== '' && newParam.temperature != null) data.temperature = parseFloat(newParam.temperature)
+      if (newParam.gh !== '' && newParam.gh != null) data.gh = parseFloat(newParam.gh)
+      if (newParam.kh !== '' && newParam.kh != null) data.kh = parseFloat(newParam.kh)
       data.notes = newParam.notes
       await api.createParam(data)
       toast('Water test logged', 'success')
@@ -499,6 +511,7 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
                 <p className="empty-state">{tr('param.no_data')}</p>
               ) : (
                 <>
+                  <WaterParamDiagram params={params} trackedParams={trackedParams} paramRanges={paramRanges} tankSubtype={tank.subtype} />
                   <ParamChart params={params} trackedParams={trackedParams} />
                   <div className="params-table">
                     <table>

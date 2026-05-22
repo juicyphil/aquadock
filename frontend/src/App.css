@@ -94,6 +94,7 @@ body {
 .clickable-photo { cursor: pointer; transition: opacity 0.15s; }
 .clickable-photo:hover { opacity: 0.85; }
 .detail-emoji { font-size: 3rem; display: block; text-align: center; margin-bottom: 1rem; }
+.issue-thumb { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; flex-shrink: 0; }
 
 .lightbox-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex;
@@ -113,6 +114,36 @@ body {
 .param-unit { font-weight: 400; color: var(--text3); }
 
 @media (max-width: 600px) { .param-charts { grid-template-columns: 1fr; } }
+
+/* Water Parameter Diagram */
+.water-diagram { margin-bottom: 1.5rem; }
+.diagram-section { margin-bottom: 1.25rem; }
+.diagram-section-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text2); }
+.diagram-cycle-svg { width: 100%; height: auto; max-width: 600px; display: block; margin: 0 auto; }
+.diagram-gauges { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.diagram-gauge-card {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.75rem;
+}
+.diagram-gauge-header { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.4rem; }
+.diagram-gauge-name { flex: 1; font-size: 0.8rem; font-weight: 600; color: var(--text2); }
+.diagram-gauge-value { font-size: 0.8rem; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 4px; }
+.gauge-bar-track { position: relative; height: 20px; margin-bottom: 0.15rem; }
+.gauge-bar-bg {
+  position: absolute; inset: 0; background: var(--surface3); border-radius: 10px; overflow: hidden;
+}
+.gauge-bar-safe {
+  position: absolute; top: 0; bottom: 0; background: var(--green); opacity: 0.3; border-radius: 10px;
+}
+.gauge-marker {
+  position: absolute; top: 50%; transform: translate(-50%, -50%);
+  width: 14px; height: 14px; border-radius: 50%; border: 2px solid; z-index: 1;
+  transition: left 0.3s ease;
+}
+.gauge-marker-ok { background: var(--green); border-color: var(--green); }
+.gauge-marker-warn { background: var(--amber); border-color: var(--amber); }
+.gauge-marker-bad { background: var(--rose); border-color: var(--rose); }
+.gauge-labels { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--text3); }
+@media (max-width: 600px) { .diagram-gauges { grid-template-columns: 1fr; } }
 
 .loading-screen {
   display: flex; align-items: center; justify-content: center;

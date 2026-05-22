@@ -3,11 +3,12 @@ package database
 import (
 	"aquadock/internal/models"
 	"fmt"
+	"time"
 )
 
 func (db *DB) CreateIssue(i *models.IssueCreate) (*models.Issue, error) {
 	if i.ObservedDate == "" {
-		i.ObservedDate = "date('now')"
+		i.ObservedDate = time.Now().UTC().Format("2006-01-02")
 	}
 	res, err := db.Exec(`INSERT INTO issues (tank_id, title, description, observed_date)
 		VALUES (?, ?, ?, ?)`,
@@ -80,6 +81,9 @@ func scanIssues(rows Rows) ([]models.Issue, error) {
 		i.ResolvedAt = resolvedAt
 		i.PhotoURL = photoURL
 		issues = append(issues, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows issue: %w", err)
 	}
 	return issues, nil
 }

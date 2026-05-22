@@ -38,7 +38,10 @@ func (h *DashboardHandler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	today := time.Now().UTC().Format("2006-01-02")
-	allEvents, _ := h.db.ListAllEvents()
+	allEvents, err := h.db.ListAllEvents()
+	if err != nil {
+		allEvents = []models.Event{}
+	}
 
 	todayCount := 0
 	overdueCount := 0
@@ -61,8 +64,14 @@ func (h *DashboardHandler) Get(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			todayT, _ := time.Parse("2006-01-02", today)
-			completions, _ := h.db.ListCompletionsByEvent(e.ID)
-			skips, _ := h.db.ListSkipsByEvent(e.ID)
+			completions, err := h.db.ListCompletionsByEvent(e.ID)
+			if err != nil {
+				completions = map[string]bool{}
+			}
+			skips, err := h.db.ListSkipsByEvent(e.ID)
+			if err != nil {
+				skips = map[string]bool{}
+			}
 
 			occurrences := logic.ComputeOccurrences(start, e.Recurrence, start, todayT)
 			for _, d := range occurrences {
@@ -91,8 +100,14 @@ func (h *DashboardHandler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, tank := range tanks {
-		inhabs, _ := h.db.ListInhabitants(tank.ID)
-		latestParam, _ := h.db.GetLatestWaterParam(tank.ID)
+		inhabs, err := h.db.ListInhabitants(tank.ID)
+		if err != nil {
+			inhabs = []models.Inhabitant{}
+		}
+		latestParam, err := h.db.GetLatestWaterParam(tank.ID)
+		if err != nil {
+			latestParam = nil
+		}
 
 		resp.Tanks = append(resp.Tanks, models.DashboardTank{
 			Tank:            tank,

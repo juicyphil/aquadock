@@ -39,7 +39,11 @@ func NewIssueHandler(db interface {
 }
 
 func (h *IssueHandler) List(w http.ResponseWriter, r *http.Request) {
-	tankID, _ := strconv.ParseInt(chi.URLParam(r, "tankId"), 10, 64)
+	tankID, err := strconv.ParseInt(chi.URLParam(r, "tankId"), 10, 64)
+	if err != nil || tankID <= 0 {
+		writeError(w, 400, "invalid tank id")
+		return
+	}
 	issues, err := h.db.ListIssuesByTank(tankID)
 	if err != nil {
 		writeError(w, 500, "failed to list issues")
@@ -72,7 +76,11 @@ func (h *IssueHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *IssueHandler) Get(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, 400, "invalid issue id")
+		return
+	}
 	issue, err := h.db.GetIssue(id)
 	if err != nil {
 		writeError(w, 404, "issue not found")
@@ -82,7 +90,11 @@ func (h *IssueHandler) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *IssueHandler) Update(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, 400, "invalid issue id")
+		return
+	}
 	var req models.IssueUpdate
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, 400, "invalid request")
@@ -97,7 +109,11 @@ func (h *IssueHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *IssueHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, 400, "invalid issue id")
+		return
+	}
 	issue, err := h.db.GetIssue(id)
 	if err != nil || issue == nil {
 		writeError(w, 404, "issue not found")
@@ -118,7 +134,10 @@ func (h *IssueHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	os.MkdirAll(h.photoDir, 0755)
+	if err := os.MkdirAll(h.photoDir, 0755); err != nil {
+		writeError(w, 500, "error creating photo directory")
+		return
+	}
 	filename := fmt.Sprintf("issue_%d%s", id, ext)
 	destPath := filepath.Join(h.photoDir, filename)
 
@@ -130,6 +149,8 @@ func (h *IssueHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	defer dst.Close()
 
 	if _, err := io.Copy(dst, file); err != nil {
+		dst.Close()
+		os.Remove(destPath)
 		writeError(w, 500, "error saving photo")
 		return
 	}
@@ -145,7 +166,15 @@ func (h *IssueHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 
 func (h *IssueHandler) ServePhoto(w http.ResponseWriter, r *http.Request) {
 	filename := strings.TrimPrefix(r.URL.Path, "/api/issues/photos/")
+	if strings.Contains(filename, "..") {
+		writeError(w, 400, "invalid filename")
+		return
+	}
 	filePath := filepath.Join(h.photoDir, filename)
+	if !strings.HasPrefix(filepath.Clean(filePath), h.photoDir) {
+		writeError(w, 400, "invalid filename")
+		return
+	}
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		writeError(w, 404, "photo not found")

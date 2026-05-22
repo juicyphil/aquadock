@@ -49,6 +49,9 @@ func (db *DB) ListTanks() ([]models.Tank, error) {
 		t.PhotoURL = photoURL
 		tanks = append(tanks, t)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows tank: %w", err)
+	}
 	return tanks, nil
 }
 

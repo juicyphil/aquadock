@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -19,8 +20,11 @@ func JWTAuth(secret string) func(http.Handler) http.Handler {
 			tokenStr := strings.TrimPrefix(auth, "Bearer ")
 
 			token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
+				if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+				}
 				return []byte(secret), nil
-			})
+			}, jwt.WithValidMethods([]string{"HS256"}))
 			if err != nil || !token.Valid {
 				writeError(w, 401, "invalid token")
 				return
@@ -32,7 +36,12 @@ func JWTAuth(secret string) func(http.Handler) http.Handler {
 				return
 			}
 
-			userID := int64(claims["user_id"].(float64))
+			userIDFloat, ok := claims["user_id"].(float64)
+			if !ok {
+				writeError(w, 401, "invalid token claims")
+				return
+			}
+			userID := int64(userIDFloat)
 			ctx := context.WithValue(r.Context(), "user_id", userID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

@@ -56,7 +56,10 @@ func (h *PhotoHandler) Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	os.MkdirAll(h.photoDir, 0755)
+	if err := os.MkdirAll(h.photoDir, 0755); err != nil {
+		writeError(w, 500, "error creating photo directory")
+		return
+	}
 	filename := fmt.Sprintf("tank_%d%s", id, ext)
 	destPath := filepath.Join(h.photoDir, filename)
 
@@ -68,6 +71,8 @@ func (h *PhotoHandler) Upload(w http.ResponseWriter, r *http.Request) {
 	defer dst.Close()
 
 	if _, err := io.Copy(dst, file); err != nil {
+		dst.Close()
+		os.Remove(destPath)
 		writeError(w, 500, "error saving photo")
 		return
 	}
@@ -83,7 +88,15 @@ func (h *PhotoHandler) Upload(w http.ResponseWriter, r *http.Request) {
 
 func (h *PhotoHandler) Serve(w http.ResponseWriter, r *http.Request) {
 	filename := strings.TrimPrefix(r.URL.Path, "/api/tanks/photos/")
+	if strings.Contains(filename, "..") {
+		writeError(w, 400, "invalid filename")
+		return
+	}
 	filePath := filepath.Join(h.photoDir, filename)
+	if !strings.HasPrefix(filepath.Clean(filePath), h.photoDir) {
+		writeError(w, 400, "invalid filename")
+		return
+	}
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		writeError(w, 404, "photo not found")

@@ -3,18 +3,17 @@ package database
 import (
 	"aquadock/internal/models"
 	"fmt"
+	"time"
 )
 
 func (db *DB) CreateWaterParam(p *models.WaterParamCreate) (*models.WaterParam, error) {
 	testedAt := p.TestedAt
 	if testedAt == "" {
-		testedAt = "datetime('now')"
-	} else {
-		testedAt = "'" + testedAt + "'"
+		testedAt = time.Now().UTC().Format("2006-01-02 15:04:05")
 	}
-	res, err := db.Exec(fmt.Sprintf(`INSERT INTO water_params (tank_id, tested_at, ammonia, nitrite, nitrate, ph, temperature, gh, kh, notes)
-		VALUES (?, %s, ?, ?, ?, ?, ?, ?, ?, ?)`, testedAt),
-		p.TankID, p.Ammonia, p.Nitrite, p.Nitrate, p.Ph, p.Temperature, p.Gh, p.Kh, p.Notes)
+	res, err := db.Exec(`INSERT INTO water_params (tank_id, tested_at, ammonia, nitrite, nitrate, ph, temperature, gh, kh, notes)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		p.TankID, testedAt, p.Ammonia, p.Nitrite, p.Nitrate, p.Ph, p.Temperature, p.Gh, p.Kh, p.Notes)
 	if err != nil {
 		return nil, fmt.Errorf("create param: %w", err)
 	}
@@ -47,6 +46,9 @@ func (db *DB) ListWaterParams(tankID int64, limit int) ([]models.WaterParam, err
 			return nil, fmt.Errorf("scan param: %w", err)
 		}
 		params = append(params, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows param: %w", err)
 	}
 	return params, nil
 }
@@ -90,6 +92,9 @@ func (db *DB) ListParamRanges() ([]models.ParamRange, error) {
 			return nil, fmt.Errorf("scan param range: %w", err)
 		}
 		ranges = append(ranges, r)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows param range: %w", err)
 	}
 	return ranges, nil
 }

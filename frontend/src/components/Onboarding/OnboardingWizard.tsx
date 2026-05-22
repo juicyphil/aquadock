@@ -3,6 +3,7 @@ import type { TankCreate, InhabitantCreate } from '../../types'
 import { TANK_TYPES, SUBTYPES, EVENT_TYPES, RECURRENCE_OPTIONS } from '../../types'
 import { api } from '../../api/client'
 import { useTranslation } from '../../i18n'
+import { useToast } from '../UI/Toast'
 
 const DEFAULT_EVENTS = [
   { type: 'feed', key: 'onboarding.events_feed', recurrence: '1d', checked: true },
@@ -17,6 +18,7 @@ interface Props {
 
 export function OnboardingWizard({ onComplete }: Props) {
   const { t } = useTranslation()
+  const { toast } = useToast()
   const [step, setStep] = useState(0)
   const [busy, setBusy] = useState(false)
   const [tank, setTank] = useState<TankCreate>({
@@ -61,7 +63,10 @@ export function OnboardingWizard({ onComplete }: Props) {
       }
       localStorage.setItem('aquadock_onboarded', 'true')
       onComplete()
-    } catch { setBusy(false) }
+    } catch (err: any) {
+      toast(err?.message || 'Something went wrong', 'error')
+      setBusy(false)
+    }
   }
 
   const steps = [
@@ -177,7 +182,7 @@ export function OnboardingWizard({ onComplete }: Props) {
       {tank.name.trim() ? (
         <p style={{ color: 'var(--text2)', textAlign: 'center', lineHeight: 1.6 }}>
           {t('onboarding.done_desc', { name: tank.name })}
-          {inhabitants.length > 0 && ` ${t('onboarding.with')} ${inhabitants.length} ${t('inhabitant.name').toLowerCase()}${inhabitants.length > 1 ? 's' : ''}`}
+          {inhabitants.length > 0 && ` ${t('onboarding.with')} ${inhabitants.length} ${t('inhabitant.plural_name')}`}
           {selectedEvents.some(e => e.checked) && ` ${t('onboarding.with')} ${selectedEvents.filter(e => e.checked).length} ${t('onboarding.tasks')}`}.
         </p>
       ) : (

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import type { User } from '../../types'
 import { api } from '../../api/client'
 
@@ -24,19 +24,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('aquadock_token'))
   const [loading, setLoading] = useState(true)
+  const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
+    abortRef.current?.abort()
+    const ac = new AbortController()
+    abortRef.current = ac
+
     if (token) {
-      api.getStatus()
+      api.getStatus({ signal: ac.signal })
         .then(setUser)
         .catch(() => {
-          localStorage.removeItem('aquadock_token')
-          setToken(null)
+          if (!ac.signal.aborted) {
+            localStorage.removeItem('aquadock_token')
+            setToken(null)
+          }
         })
-        .finally(() => setLoading(false))
+        .finally(() => {
+          if (!ac.signal.aborted) setLoading(false)
+        })
     } else {
       setLoading(false)
     }
+
+    return () => ac.abort()
   }, [token])
 
   const login = useCallback(async (username: string, password: string) => {

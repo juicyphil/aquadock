@@ -13,7 +13,7 @@ interface Props {
 }
 
 function ParamBadge({ label, value, min, max }: { label: string; value: number; min: number; max: number }) {
-  const status = value > max ? 'bad' : value > max * 0.8 ? 'warn' : 'ok'
+  const status = value > max ? 'bad' : value > max * 0.8 ? 'warn' : value < min ? 'bad' : value < min * 1.2 ? 'warn' : 'ok'
   return (
     <span className={`param-badge param-${status}`} title={`${label}: ${value}`}>
       {label} {value}

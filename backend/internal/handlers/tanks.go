@@ -69,7 +69,11 @@ func (h *TankHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TankHandler) Get(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, 400, "invalid tank id")
+		return
+	}
 	tank, err := h.db.GetTank(id)
 	if err != nil {
 		writeError(w, 404, "tank not found")
@@ -79,7 +83,11 @@ func (h *TankHandler) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TankHandler) Update(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, 400, "invalid tank id")
+		return
+	}
 	var req models.TankUpdate
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, 400, "invalid request")
@@ -94,7 +102,11 @@ func (h *TankHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TankHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, 400, "invalid tank id")
+		return
+	}
 	if err := h.db.DeleteTank(id); err != nil {
 		writeError(w, 500, "failed to delete tank")
 		return

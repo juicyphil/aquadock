@@ -6,7 +6,7 @@ function getToken(): string | null {
   return localStorage.getItem('aquadock_token')
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(path: string, options: RequestInit & { signal?: AbortSignal } = {}): Promise<T> {
   const token = getToken()
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -33,7 +33,7 @@ export const api = {
     request<AuthResponse>('/auth/register', { method: 'POST', body: JSON.stringify({ username, email, password }) }),
   login: (username: string, password: string) =>
     request<AuthResponse>('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
-  getStatus: () => request<User>('/auth/status'),
+  getStatus: (opts?: { signal?: AbortSignal }) => request<User>('/auth/status', opts),
 
   // Tanks
   listTanks: () => request<Tank[]>('/tanks'),

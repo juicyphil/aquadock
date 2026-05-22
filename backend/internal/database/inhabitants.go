@@ -41,6 +41,9 @@ func (db *DB) ListInhabitants(tankID int64) ([]models.Inhabitant, error) {
 		}
 		inhabs = append(inhabs, i)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows inhabitant: %w", err)
+	}
 	return inhabs, nil
 }
 

@@ -21,6 +21,7 @@ export function SettingsModal({ onClose, dashboardMode, onDashboardModeChange }:
   const { user, logout } = useAuth()
   const [tab, setTab] = useState<Tab>('profile')
   const [ranges, setRanges] = useState<ParamRange[]>([])
+  const [rangesLoading, setRangesLoading] = useState(true)
   const [editedRanges, setEditedRanges] = useState<Record<string, ParamRange>>({})
 
   const themes = [
@@ -32,14 +33,15 @@ export function SettingsModal({ onClose, dashboardMode, onDashboardModeChange }:
   ] as const
 
   useEffect(() => {
-    api.listParamRanges().then(setRanges).catch(() => {})
-  }, [])
+    setRangesLoading(true)
+    api.listParamRanges().then(setRanges).catch(() => toast('Failed to load param ranges', 'error')).finally(() => setRangesLoading(false))
+  }, [toast])
 
   const handleRangeChange = (subtype: string, field: keyof ParamRange, value: string) => {
     const num = value === '' ? null : parseFloat(value)
     setEditedRanges(prev => ({
       ...prev,
-      [subtype]: { ...(prev[subtype] || ranges.find(r => r.tank_subtype === subtype)!), [field]: num },
+      [subtype]: { ...(prev[subtype] || ranges.find(r => r.tank_subtype === subtype) || prev[subtype] || { tank_subtype: subtype }), [field]: num },
     }))
   }
 
@@ -117,6 +119,10 @@ export function SettingsModal({ onClose, dashboardMode, onDashboardModeChange }:
 
           {tab === 'params' && (
             <div>
+              {rangesLoading ? (
+                <div className="loading">{t('common.loading')}</div>
+              ) : (
+                <>
               <div className="param-ranges-table">
                 <table>
                   <thead>
@@ -153,6 +159,8 @@ export function SettingsModal({ onClose, dashboardMode, onDashboardModeChange }:
               </div>
               {Object.keys(editedRanges).length > 0 && (
                 <button className="btn btn-primary" onClick={saveRanges}>{t('common.save')}</button>
+              )}
+              </>
               )}
             </div>
           )}

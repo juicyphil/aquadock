@@ -5,6 +5,8 @@ import { api } from '../../api/client'
 import { useTranslation } from '../../i18n'
 import { useToast } from '../UI/Toast'
 
+const PLANNER_DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
 type PlannerMode = 'day' | 'week' | 'month'
 
 interface Props {
@@ -110,8 +112,8 @@ export function PlannerView({ tanks, onRefresh }: Props) {
       return
     }
     try {
-      newEvent.scheduled_date = dateStr(currentDate)
-      await api.createEvent(newEvent)
+      setNewEvent(prev => ({ ...prev, scheduled_date: dateStr(currentDate) }))
+      await api.createEvent({ ...newEvent, scheduled_date: dateStr(currentDate) })
       toast('Event created!', 'success')
       setShowAddEvent(false)
       setNewEvent({ tank_id: 0, type: 'feed', title: '', recurrence: '', scheduled_date: '' })
@@ -212,8 +214,6 @@ export function PlannerView({ tanks, onRefresh }: Props) {
     </div>
   )
 
-  const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-
   return (
     <div className="planner-view">
       <div className="planner-header">
@@ -268,7 +268,7 @@ export function PlannerView({ tanks, onRefresh }: Props) {
                 return (
                   <div key={i} className={`planner-week-day ${isToday ? 'today' : ''}`}>
                     <div className="planner-week-day-header">
-                      <span className="planner-week-day-name">{DAY_NAMES[i]}</span>
+                      <span className="planner-week-day-name">{PLANNER_DAY_NAMES[i]}</span>
                       <span className="planner-week-day-number">{day.getDate()}</span>
                     </div>
                     <div className="planner-week-day-events">
@@ -298,7 +298,7 @@ export function PlannerView({ tanks, onRefresh }: Props) {
             ) : (
               <>
                 <div className="planner-month-grid">
-                  {DAY_NAMES.map(d => (
+                  {PLANNER_DAY_NAMES.map(d => (
                     <div key={d} className="planner-month-header">{d}</div>
                   ))}
                   {(() => {
@@ -336,14 +336,18 @@ export function PlannerView({ tanks, onRefresh }: Props) {
                   })()}
                 </div>
                 <div className="planner-section" style={{ marginTop: '1rem' }}>
-                  <h3 className="section-title">{t('planner.today')} ({formatDateLabel()})</h3>
-                  {events.length === 0 ? (
-                    <div className="empty-state">{t('event.no_events')}</div>
-                  ) : (
-                    <div className="event-list">
-                      {events.map(e => renderEventCard(e))}
-                    </div>
-                  )}
+                  <h3 className="section-title">{t('planner.today')} ({dateStr(currentDate)})</h3>
+                  {(() => {
+                    const todayStr = dateStr(currentDate)
+                    const todayEvents = events.filter(e => e.occurrence_date === todayStr)
+                    return todayEvents.length === 0 ? (
+                      <div className="empty-state">{t('event.no_events')}</div>
+                    ) : (
+                      <div className="event-list">
+                        {todayEvents.map(e => renderEventCard(e))}
+                      </div>
+                    )
+                  })()}
                 </div>
               </>
             )}

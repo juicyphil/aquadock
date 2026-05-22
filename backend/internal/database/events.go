@@ -144,6 +144,9 @@ func (db *DB) ListCompletionsByEvent(id int64) (map[string]bool, error) {
 		}
 		result[d] = true
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows completion: %w", err)
+	}
 	return result, nil
 }
 
@@ -160,6 +163,9 @@ func (db *DB) ListSkipsByEvent(id int64) (map[string]bool, error) {
 			return nil, fmt.Errorf("scan skip: %w", err)
 		}
 		result[d] = true
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows skip: %w", err)
 	}
 	return result, nil
 }
@@ -185,6 +191,9 @@ func scanEvents(rows Rows) ([]models.Event, error) {
 		e.CompletedAt = completedAt
 		events = append(events, e)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows event: %w", err)
+	}
 	return events, nil
 }
 
@@ -192,4 +201,5 @@ type Rows interface {
 	Next() bool
 	Scan(dest ...interface{}) error
 	Close() error
+	Err() error
 }

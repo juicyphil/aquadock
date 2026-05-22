@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react'
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react'
 
 interface Toast {
   id: number
@@ -16,13 +16,23 @@ let nextId = 0
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
+  const timersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map())
 
   const addToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'info') => {
     const id = nextId++
     setToasts(prev => [...prev, { id, message, type }])
-    setTimeout(() => {
+    const timer = setTimeout(() => {
+      timersRef.current.delete(id)
       setToasts(prev => prev.filter(t => t.id !== id))
     }, 3000)
+    timersRef.current.set(id, timer)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      timersRef.current.forEach(t => clearTimeout(t))
+      timersRef.current.clear()
+    }
   }, [])
 
   return (

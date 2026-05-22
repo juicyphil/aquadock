@@ -1,7 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../Auth/AuthContext'
 import { useTheme } from '../../theme'
 import { useTranslation } from '../../i18n'
+
+const THEMES = ['light', 'dark', 'ocean', 'reef', 'pond'] as const
 
 interface HeaderProps {
   viewMode: 'dashboard' | 'planner' | 'tanks'
@@ -18,8 +20,17 @@ export function Header({ viewMode, setViewMode, onAddTank, onSettings, dashboard
   const { theme, setTheme } = useTheme()
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
-  const themes = ['light', 'dark', 'ocean', 'reef', 'pond'] as const
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (menuOpen && menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [menuOpen])
 
   return (
     <header className="header">
@@ -56,13 +67,13 @@ export function Header({ viewMode, setViewMode, onAddTank, onSettings, dashboard
         <button className="icon-btn" onClick={onAddTank} title={t('nav.add_tank')}>➕</button>
         <button className="icon-btn" onClick={onSettings} title={t('nav.settings')}>⚙️</button>
         <button className="icon-btn" onClick={() => {
-          const idx = themes.indexOf(theme)
-          setTheme(themes[(idx + 1) % themes.length])
+          const idx = THEMES.indexOf(theme)
+          setTheme(THEMES[(idx + 1) % THEMES.length])
         }} title={t('settings.theme')}>
           🎨
         </button>
-        {user ? (
-          <div className="user-menu">
+          {user ? (
+          <div className="user-menu" ref={menuRef}>
             <button className="icon-btn" onClick={() => setMenuOpen(!menuOpen)}>
               👤 {user.username}
             </button>

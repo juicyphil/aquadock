@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type DB struct {
@@ -151,7 +153,78 @@ func (db *DB) Init() error {
 	db.Exec("ALTER TABLE tanks ADD COLUMN photo_url TEXT")
 	db.Exec("ALTER TABLE tanks ADD COLUMN tracked_params TEXT NOT NULL DEFAULT 'ammonia,nitrite,nitrate,ph,temperature,gh,kh'")
 
-	return db.seedParamRanges()
+	if err := db.seedParamRanges(); err != nil {
+		return err
+	}
+	return db.seedDemoUser()
+}
+
+func (db *DB) seedDemoUser() error {
+	var count int
+	err := db.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
+	if err != nil || count > 0 {
+		return err
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte("demo123"), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("hash demo password: %w", err)
+	}
+	res, err := db.Exec("INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
+		"demo", "demo@aquadock.local", string(hash))
+	if err != nil {
+		return fmt.Errorf("create demo user: %w", err)
+	}
+	userID, _ := res.LastInsertId()
+	log.Printf("created demo user id=%d (username=demo, password=demo123)", userID)
+
+	tracked := "ammonia,nitrite,nitrate,ph,temperature,gh,kh"
+	setupDate := time.Now().AddDate(0, -3, 0).Format("2006-01-02")
+	tr, err := db.Exec(`INSERT INTO tanks (user_id, name, emoji, liters, type, subtype, setup_date, tracked_params)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		userID, "Amazon Paradise", "🌿", 120, "freshwater", "community", setupDate, tracked)
+	if err != nil {
+		return fmt.Errorf("create demo tank: %w", err)
+	}
+	tankID, _ := tr.LastInsertId()
+
+	for _, inh := range []struct{ name, species, count, emoji string }{
+		{"Neon Tetra", "Paracheirodon innesi", "12", "🐟"},
+		{"Corydoras", "Corydoras paleatus", "6", "🐡"},
+		{"Nerite Snail", "Neritina natalensis", "3", "🐌"},
+	} {
+		_, err := db.Exec(`INSERT INTO inhabitants (tank_id, name, species, count, emoji) VALUES (?, ?, ?, ?, ?)`,
+			tankID, inh.name, inh.species, inh.count, inh.emoji)
+		if err != nil {
+			log.Printf("seed demo inhabitant: %v", err)
+		}
+	}
+
+	for _, ev := range []struct{ t, title, rec string }{
+		{"feed", "Feed the fish", "1d"},
+		{"water_change", "Water change", "7d"},
+		{"test_water", "Test water parameters", "7d"},
+		{"clean_filter", "Clean filter", "14d"},
+	} {
+		_, err := db.Exec(`INSERT INTO events (tank_id, type, title, scheduled_date, recurrence) VALUES (?, ?, ?, ?, ?)`,
+			tankID, ev.t, ev.title, setupDate, ev.rec)
+		if err != nil {
+			log.Printf("seed demo event: %v", err)
+		}
+	}
+
+	for i := 0; i < 8; i++ {
+		day := time.Now().AddDate(0, 0, -(7 - i)*3)
+		_, err := db.Exec(`INSERT INTO water_params (tank_id, tested_at, ammonia, nitrite, nitrate, ph, temperature, notes)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			tankID, day.Format("2006-01-02 15:04:05"),
+			0.0, 0.0, 5.0+float64(i)*2.0, 7.0, 25.0, "Demo test reading")
+		if err != nil {
+			log.Printf("seed demo water param: %v", err)
+		}
+	}
+
+	return nil
 }
 
 func (db *DB) seedParamRanges() error {
