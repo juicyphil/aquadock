@@ -668,27 +668,25 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
               {viewingIssue.resolved_at && <div><strong>{tr('issue.resolved_at')}:</strong> {viewingIssue.resolved_at}</div>}
             </div>
 
-            {viewingIssuePhotos.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.75rem' }}>
-                {viewingIssue.photo_url && (
-                  <img src={viewingIssue.photo_url} alt={viewingIssue.title}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.75rem' }}>
+              {viewingIssue.photo_url && (
+                <img src={viewingIssue.photo_url} alt={viewingIssue.title}
+                  style={{ width: '100%', maxHeight: 250, objectFit: 'contain', borderRadius: 8, background: 'var(--surface3)' }} />
+              )}
+              {viewingIssuePhotos.map(ph => (
+                <div key={ph.id} style={{ position: 'relative' }}>
+                  <img src={ph.photo_url} alt={ph.caption || ''}
                     style={{ width: '100%', maxHeight: 250, objectFit: 'contain', borderRadius: 8, background: 'var(--surface3)' }} />
-                )}
-                {viewingIssuePhotos.map(ph => (
-                  <div key={ph.id} style={{ position: 'relative' }}>
-                    <img src={ph.photo_url} alt={ph.caption || ''}
-                      style={{ width: '100%', maxHeight: 250, objectFit: 'contain', borderRadius: 8, background: 'var(--surface3)' }} />
-                    {ph.caption && <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text2)', marginTop: '0.2rem' }}>{ph.caption}</span>}
-                    <button className="btn btn-sm btn-danger"
-                      style={{ position: 'absolute', top: 4, right: 4 }}
-                      onClick={async () => {
-                        await api.deleteIssuePhoto(ph.id)
-                        setViewingIssuePhotos(prev => prev.filter(p => p.id !== ph.id))
-                      }}>🗑️</button>
-                  </div>
-                ))}
-              </div>
-            )}
+                  {ph.caption && <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text2)', marginTop: '0.2rem' }}>{ph.caption}</span>}
+                  <button className="btn btn-sm btn-danger"
+                    style={{ position: 'absolute', top: 4, right: 4 }}
+                    onClick={async () => {
+                      await api.deleteIssuePhoto(ph.id)
+                      setViewingIssuePhotos(prev => prev.filter(p => p.id !== ph.id))
+                    }}>🗑️</button>
+                </div>
+              ))}
+            </div>
 
             {viewingIssue.description && (
               <p style={{ marginTop: '0.75rem', color: 'var(--text2)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{viewingIssue.description}</p>
