@@ -31,17 +31,28 @@ func NewAuthHandler(db interface {
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req models.UserCreate
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, 400, "invalid request")
+		writeError(w, 400, "invalid request body")
 		return
 	}
-	if req.Username == "" || req.Password == "" || req.Email == "" {
-		writeError(w, 400, "username, email, and password required")
+	if req.Username == "" {
+		writeError(w, 400, "username is required")
 		return
+	}
+	if req.Password == "" {
+		writeError(w, 400, "password is required")
+		return
+	}
+	if len(req.Password) < 4 {
+		writeError(w, 400, "password must be at least 4 characters")
+		return
+	}
+	if req.Email == "" {
+		req.Email = req.Username + "@aquadock.local"
 	}
 
 	user, err := h.db.CreateUser(&req)
 	if err != nil {
-		writeError(w, 409, "username or email already taken")
+		writeError(w, 409, "username already taken")
 		return
 	}
 

@@ -1,41 +1,44 @@
 package models
 
 type Tank struct {
-	ID         int64   `json:"id"`
-	Name       string  `json:"name"`
-	Emoji      string  `json:"emoji"`
-	Liters     float64 `json:"liters"`
-	Type       string  `json:"type"`
-	Subtype    string  `json:"subtype"`
-	SetupDate  string  `json:"setup_date"`
-	FilterType string  `json:"filter_type"`
-	Notes      string  `json:"notes"`
-	PhotoURL   *string `json:"photo_url"`
-	CreatedAt  string  `json:"created_at"`
+	ID            int64   `json:"id"`
+	Name          string  `json:"name"`
+	Emoji         string  `json:"emoji"`
+	Liters        float64 `json:"liters"`
+	Type          string  `json:"type"`
+	Subtype       string  `json:"subtype"`
+	SetupDate     string  `json:"setup_date"`
+	FilterType    string  `json:"filter_type"`
+	Notes         string  `json:"notes"`
+	PhotoURL      *string `json:"photo_url"`
+	TrackedParams string  `json:"tracked_params"`
+	CreatedAt     string  `json:"created_at"`
 }
 
 type TankCreate struct {
-	Name       string  `json:"name"`
-	Emoji      string  `json:"emoji"`
-	Liters     float64 `json:"liters"`
-	Type       string  `json:"type"`
-	Subtype    string  `json:"subtype"`
-	SetupDate  string  `json:"setup_date"`
-	FilterType string  `json:"filter_type"`
-	Notes      string  `json:"notes"`
-	PhotoURL   *string `json:"photo_url"`
+	Name          string  `json:"name"`
+	Emoji         string  `json:"emoji"`
+	Liters        float64 `json:"liters"`
+	Type          string  `json:"type"`
+	Subtype       string  `json:"subtype"`
+	SetupDate     string  `json:"setup_date"`
+	FilterType    string  `json:"filter_type"`
+	Notes         string  `json:"notes"`
+	PhotoURL      *string `json:"photo_url"`
+	TrackedParams string  `json:"tracked_params"`
 }
 
 type TankUpdate struct {
-	Name       *string  `json:"name"`
-	Emoji      *string  `json:"emoji"`
-	Liters     *float64 `json:"liters"`
-	Type       *string  `json:"type"`
-	Subtype    *string  `json:"subtype"`
-	SetupDate  *string  `json:"setup_date"`
-	FilterType *string  `json:"filter_type"`
-	Notes      *string  `json:"notes"`
-	PhotoURL   *string  `json:"photo_url"`
+	Name          *string  `json:"name"`
+	Emoji         *string  `json:"emoji"`
+	Liters        *float64 `json:"liters"`
+	Type          *string  `json:"type"`
+	Subtype       *string  `json:"subtype"`
+	SetupDate     *string  `json:"setup_date"`
+	FilterType    *string  `json:"filter_type"`
+	Notes         *string  `json:"notes"`
+	PhotoURL      *string  `json:"photo_url"`
+	TrackedParams *string  `json:"tracked_params"`
 }
 
 type Inhabitant struct {
@@ -71,6 +74,12 @@ type Event struct {
 	CompletedAt   *string `json:"completed_at"`
 	Note          string  `json:"note"`
 	CreatedAt     string  `json:"created_at"`
+}
+
+type EventOccurrence struct {
+	Event
+	OccurrenceDate string `json:"occurrence_date"`
+	Completed      bool   `json:"completed"`
 }
 
 type EventCreate struct {
@@ -158,8 +167,43 @@ type User struct {
 
 type UserCreate struct {
 	Username string `json:"username"`
-	Email    string `json:"email"`
+	Email    string `json:"email,omitempty"`
 	Password string `json:"password"`
+}
+
+type Issue struct {
+	ID          int64   `json:"id"`
+	TankID      int64   `json:"tank_id"`
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
+	ObservedDate string `json:"observed_date"`
+	ResolvedAt  *string `json:"resolved_at"`
+	PhotoURL    *string `json:"photo_url"`
+	CreatedAt   string  `json:"created_at"`
+	UpdatedAt   string  `json:"updated_at"`
+}
+
+type IssueCreate struct {
+	TankID       int64  `json:"tank_id"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	ObservedDate string `json:"observed_date"`
+}
+
+type IssueUpdate struct {
+	Title        *string `json:"title"`
+	Description  *string `json:"description"`
+	ObservedDate *string `json:"observed_date"`
+	ResolvedAt   *string `json:"resolved_at"`
+}
+
+type EventUpdate struct {
+	Type          *string `json:"type"`
+	Title         *string `json:"title"`
+	ScheduledDate *string `json:"scheduled_date"`
+	ScheduledTime *string `json:"scheduled_time"`
+	Recurrence    *string `json:"recurrence"`
+	Note          *string `json:"note"`
 }
 
 type LoginRequest struct {

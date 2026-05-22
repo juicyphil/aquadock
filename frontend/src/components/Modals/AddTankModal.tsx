@@ -10,6 +10,18 @@ interface Props {
   onSaved: () => void
 }
 
+const PARAM_OPTIONS = [
+  { key: 'ammonia', label: 'Ammonia' },
+  { key: 'nitrite', label: 'Nitrite' },
+  { key: 'nitrate', label: 'Nitrate' },
+  { key: 'ph', label: 'pH' },
+  { key: 'temperature', label: 'Temperature' },
+  { key: 'gh', label: 'General Hardness (GH)' },
+  { key: 'kh', label: 'Carbonate Hardness (KH)' },
+]
+
+const ALL_PARAM_KEYS = PARAM_OPTIONS.map(p => p.key).join(',')
+
 export function AddTankModal({ onClose, onSaved }: Props) {
   const { t } = useTranslation()
   const { toast } = useToast()
@@ -24,8 +36,15 @@ export function AddTankModal({ onClose, onSaved }: Props) {
     notes: '',
   })
   const [pendingPhoto, setPendingPhoto] = useState<File | null>(null)
+  const [trackedParams, setTrackedParams] = useState<string[]>(PARAM_OPTIONS.map(p => p.key))
 
   const subtypes = SUBTYPES[form.type] || []
+
+  const toggleParam = (key: string) => {
+    setTrackedParams(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    )
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,7 +53,7 @@ export function AddTankModal({ onClose, onSaved }: Props) {
       return
     }
     try {
-      const created = await api.createTank(form)
+      const created = await api.createTank({ ...form, tracked_params: trackedParams.join(',') || ALL_PARAM_KEYS })
       if (pendingPhoto && created?.id) {
         await api.uploadTankPhoto(created.id, pendingPhoto)
       }
@@ -98,6 +117,28 @@ export function AddTankModal({ onClose, onSaved }: Props) {
               const file = e.target.files?.[0]
               if (file) setPendingPhoto(file)
             }} />
+          </div>
+          <div className="form-group">
+            <label>Tracked Parameters</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.25rem' }}>
+              {PARAM_OPTIONS.map(p => (
+                <label key={p.key} style={{
+                  display: 'flex', alignItems: 'center', gap: '0.3rem',
+                  padding: '0.3rem 0.6rem', borderRadius: 6, cursor: 'pointer',
+                  background: trackedParams.includes(p.key) ? 'var(--primary)' : 'var(--surface3)',
+                  color: trackedParams.includes(p.key) ? '#fff' : 'var(--text1)',
+                  fontSize: '0.8rem', fontWeight: 600, transition: 'all 0.15s',
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={trackedParams.includes(p.key)}
+                    onChange={() => toggleParam(p.key)}
+                    style={{ display: 'none' }}
+                  />
+                  {p.label}
+                </label>
+              ))}
+            </div>
           </div>
           <div className="form-group">
             <label>{t('tank.notes')}</label>

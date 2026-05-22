@@ -14,14 +14,19 @@ export function RegisterModal({ onClose, onSwitch }: Props) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setLoading(true)
+    setError('')
     try {
       await register(username, email, password)
       onClose()
     } catch (err: any) {
       setError(err.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -36,15 +41,15 @@ export function RegisterModal({ onClose, onSwitch }: Props) {
             <input value={username} onChange={e => setUsername(e.target.value)} required />
           </div>
           <div className="form-group">
-            <label>{t('auth.email')}</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+            <label>{t('auth.email')} <small>(optional)</small></label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="optional" />
           </div>
           <div className="form-group">
             <label>{t('auth.password')}</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required />
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={4} />
           </div>
           <div className="form-actions">
-            <button type="submit" className="btn btn-primary">{t('auth.register_btn')}</button>
+            <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? '...' : t('auth.register_btn')}</button>
             <button type="button" className="btn btn-text" onClick={onSwitch}>{t('auth.has_account')}</button>
           </div>
         </form>

@@ -8,9 +8,12 @@ interface HeaderProps {
   setViewMode: (v: 'dashboard' | 'planner' | 'tanks') => void
   onAddTank: () => void
   onSettings: () => void
+  dashboardMode?: 'detail' | 'overview'
+  onSetDashboardMode?: (m: 'detail' | 'overview') => void
+  totalTanks?: number
 }
 
-export function Header({ viewMode, setViewMode, onAddTank, onSettings }: HeaderProps) {
+export function Header({ viewMode, setViewMode, onAddTank, onSettings, dashboardMode, onSetDashboardMode, totalTanks = 0 }: HeaderProps) {
   const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
   const { lang, setLang, t } = useTranslation()
@@ -32,6 +35,22 @@ export function Header({ viewMode, setViewMode, onAddTank, onSettings }: HeaderP
           <button className={`nav-btn ${viewMode === 'tanks' ? 'active' : ''}`}
             onClick={() => setViewMode('tanks')}>{t('nav.tanks')}</button>
         </nav>
+        {viewMode === 'dashboard' && totalTanks >= 2 && dashboardMode && onSetDashboardMode && (
+          <div className="mode-toggle">
+            <button
+              className={`mode-toggle-btn ${dashboardMode === 'detail' ? 'active' : ''}`}
+              onClick={() => onSetDashboardMode('detail')}
+            >
+              {t('dashboard.mode_detail')}
+            </button>
+            <button
+              className={`mode-toggle-btn ${dashboardMode === 'overview' ? 'active' : ''}`}
+              onClick={() => onSetDashboardMode('overview')}
+            >
+              {t('dashboard.mode_overview')}
+            </button>
+          </div>
+        )}
       </div>
       <div className="header-right">
         <button className="icon-btn" onClick={onAddTank} title={t('nav.add_tank')}>➕</button>

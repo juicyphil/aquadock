@@ -13,14 +13,19 @@ export function LoginModal({ onClose, onSwitch }: Props) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setLoading(true)
+    setError('')
     try {
       await login(username, password)
       onClose()
     } catch (err: any) {
       setError(err.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -39,7 +44,7 @@ export function LoginModal({ onClose, onSwitch }: Props) {
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} required />
           </div>
           <div className="form-actions">
-            <button type="submit" className="btn btn-primary">{t('auth.login_btn')}</button>
+            <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? '...' : t('auth.login_btn')}</button>
             <button type="button" className="btn btn-text" onClick={onSwitch}>{t('auth.no_account')}</button>
           </div>
         </form>

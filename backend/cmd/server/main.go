@@ -30,6 +30,7 @@ func main() {
 	dashboardHandler := handlers.NewDashboardHandler(db)
 	authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret)
 	photoHandler := handlers.NewPhotoHandler(db, cfg.PhotoDir)
+	issueHandler := handlers.NewIssueHandler(db, cfg.PhotoDir)
 
 	r := chi.NewRouter()
 	r.Use(chimw.Logger)
@@ -42,6 +43,10 @@ func main() {
 	}))
 
 	r.Route("/api", func(r chi.Router) {
+		r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.Write([]byte(`{"status":"ok"}`))
+		})
 		r.Get("/tanks/photos/{filename}", photoHandler.Serve)
 		r.Post("/auth/register", authHandler.Register)
 		r.Post("/auth/login", authHandler.Login)
@@ -63,8 +68,14 @@ func main() {
 					r.Post("/", inhabitantHandler.Create)
 				})
 
+				r.Route("/{tankId}/issues", func(r chi.Router) {
+					r.Get("/", issueHandler.List)
+					r.Post("/", issueHandler.Create)
+				})
+
 				r.Route("/{tankId}/events", func(r chi.Router) {
 					r.Get("/", eventHandler.ListByTank)
+					r.Get("/upcoming", eventHandler.ListUpcoming)
 					r.Post("/", eventHandler.Create)
 				})
 
@@ -78,7 +89,9 @@ func main() {
 			r.Put("/inhabitants/{id}", inhabitantHandler.Update)
 			r.Delete("/inhabitants/{id}", inhabitantHandler.Delete)
 
+			r.Put("/events/{id}", eventHandler.Update)
 			r.Put("/events/{id}/complete", eventHandler.Complete)
+			r.Put("/events/{id}/skip", eventHandler.Skip)
 			r.Put("/events/{id}/reschedule", eventHandler.Reschedule)
 			r.Delete("/events/{id}", eventHandler.Delete)
 
@@ -88,6 +101,12 @@ func main() {
 				r.Get("/", paramRangeHandler.List)
 				r.Put("/", paramRangeHandler.Update)
 			})
+
+			r.Get("/issues/photos/{filename}", issueHandler.ServePhoto)
+			r.Get("/issues/{id}", issueHandler.Get)
+			r.Put("/issues/{id}", issueHandler.Update)
+			r.Post("/issues/{id}/photo", issueHandler.UploadPhoto)
+			r.Delete("/issues/{id}", issueHandler.Delete)
 
 			r.Get("/dashboard", dashboardHandler.Get)
 			r.Get("/planner", eventHandler.ListByDate)

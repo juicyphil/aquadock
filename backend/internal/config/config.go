@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/joho/godotenv"
 )
@@ -11,6 +12,29 @@ type Config struct {
 	DBPath    string
 	JWTSecret string
 	PhotoDir  string
+}
+
+func dirExists(path string) bool {
+	fi, err := os.Stat(path)
+	return err == nil && fi.IsDir()
+}
+
+func resolvePath(p string) string {
+	if filepath.IsAbs(p) {
+		return p
+	}
+	exe, err := os.Executable()
+	if err == nil {
+		resolved := filepath.Join(filepath.Dir(exe), p)
+		if dirExists(filepath.Dir(resolved)) {
+			return resolved
+		}
+	}
+	wd, err := os.Getwd()
+	if err == nil {
+		return filepath.Join(wd, p)
+	}
+	return p
 }
 
 func Load() *Config {
@@ -25,6 +49,7 @@ func Load() *Config {
 	if dbPath == "" {
 		dbPath = "./data/aquadock.db"
 	}
+	dbPath = resolvePath(dbPath)
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
@@ -35,6 +60,7 @@ func Load() *Config {
 	if photoDir == "" {
 		photoDir = "./data/photos"
 	}
+	photoDir = resolvePath(photoDir)
 
 	return &Config{
 		Port:      port,

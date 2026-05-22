@@ -4,6 +4,7 @@ import type { WaterParam } from '../../types'
 
 interface Props {
   params: WaterParam[]
+  trackedParams?: string[]
 }
 
 interface ChartParam {
@@ -13,15 +14,17 @@ interface ChartParam {
   unit: string
 }
 
-const PARAMS: ChartParam[] = [
-  { key: 'ammonia', label: 'NH₃', color: '#d45b6a', unit: 'ppm' },
-  { key: 'nitrite', label: 'NO₂', color: '#d4a040', unit: 'ppm' },
-  { key: 'nitrate', label: 'NO₃', color: '#d48a40', unit: 'ppm' },
+const ALL_PARAMS: ChartParam[] = [
+  { key: 'ammonia', label: 'Ammonia (NH₃)', color: '#d45b6a', unit: 'ppm' },
+  { key: 'nitrite', label: 'Nitrite (NO₂)', color: '#d4a040', unit: 'ppm' },
+  { key: 'nitrate', label: 'Nitrate (NO₃)', color: '#d48a40', unit: 'ppm' },
   { key: 'ph', label: 'pH', color: '#5b9fd4', unit: '' },
-  { key: 'temperature', label: 'Temp °C', color: '#d46040', unit: '°C' },
+  { key: 'temperature', label: 'Temperature (°C)', color: '#d46040', unit: '°C' },
+  { key: 'gh', label: 'General Hardness (GH)', color: '#5aa06a', unit: 'dGH' },
+  { key: 'kh', label: 'Carbonate Hardness (KH)', color: '#7a8ad4', unit: 'dKH' },
 ]
 
-export function ParamChart({ params }: Props) {
+export function ParamChart({ params, trackedParams }: Props) {
   const sorted = [...params].sort((a, b) => a.tested_at.localeCompare(b.tested_at))
 
   const data = sorted.map(p => ({
@@ -32,11 +35,17 @@ export function ParamChart({ params }: Props) {
     nitrate: p.nitrate,
     ph: p.ph,
     temperature: p.temperature,
+    gh: p.gh,
+    kh: p.kh,
   }))
+
+  const visible = trackedParams
+    ? ALL_PARAMS.filter(p => trackedParams.includes(p.key))
+    : ALL_PARAMS
 
   return (
     <div className="param-charts">
-      {PARAMS.map(p => {
+      {visible.map(p => {
         const values = data.map(d => d[p.key as keyof typeof d]).filter(v => v != null)
         if (values.length < 2) return null
 

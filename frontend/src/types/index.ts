@@ -9,6 +9,7 @@ export interface Tank {
   filter_type: string
   notes: string
   photo_url: string | null
+  tracked_params: string
   created_at: string
 }
 
@@ -19,6 +20,7 @@ export interface TankUpdate {
   filter_type?: string
   notes?: string
   photo_url?: string | null
+  tracked_params?: string
 }
 
 export interface TankCreate {
@@ -30,6 +32,7 @@ export interface TankCreate {
   setup_date: string
   filter_type?: string
   notes?: string
+  tracked_params?: string
 }
 
 export interface Inhabitant {
@@ -54,6 +57,37 @@ export interface InhabitantCreate {
   notes?: string
 }
 
+export interface Issue {
+  id: number
+  tank_id: number
+  title: string
+  description: string
+  observed_date: string
+  resolved_at: string | null
+  photo_url: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface IssueCreate {
+  tank_id: number
+  title: string
+  description?: string
+  observed_date?: string
+}
+
+export interface IssueUpdate {
+  title?: string
+  description?: string
+  observed_date?: string
+  resolved_at?: string | null
+}
+
+export interface EventOccurrence extends Event {
+  occurrence_date: string
+  completed: boolean
+}
+
 export interface Event {
   id: number
   tank_id: number
@@ -68,6 +102,15 @@ export interface Event {
 }
 
 export type EventType = 'feed' | 'water_change' | 'clean_filter' | 'test_water' | 'trim_plants' | 'medicate' | 'top_off' | 'other'
+
+export interface EventUpdate {
+  type?: EventType
+  title?: string
+  scheduled_date?: string
+  scheduled_time?: string
+  recurrence?: string
+  note?: string
+}
 
 export interface EventCreate {
   tank_id: number

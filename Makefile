@@ -4,8 +4,10 @@
 build:
 	docker compose build
 
-up:
+up: build
 	docker compose up -d
+
+rebuild: build up
 
 down:
 	docker compose down

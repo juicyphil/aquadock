@@ -6,9 +6,13 @@ import (
 )
 
 func (db *DB) CreateTank(t *models.TankCreate) (*models.Tank, error) {
-	res, err := db.Exec(`INSERT INTO tanks (name, emoji, liters, type, subtype, setup_date, filter_type, photo_url, notes)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		t.Name, t.Emoji, t.Liters, t.Type, t.Subtype, t.SetupDate, t.FilterType, t.PhotoURL, t.Notes)
+	tracked := t.TrackedParams
+	if tracked == "" {
+		tracked = "ammonia,nitrite,nitrate,ph,temperature,gh,kh"
+	}
+	res, err := db.Exec(`INSERT INTO tanks (name, emoji, liters, type, subtype, setup_date, filter_type, photo_url, notes, tracked_params)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		t.Name, t.Emoji, t.Liters, t.Type, t.Subtype, t.SetupDate, t.FilterType, t.PhotoURL, t.Notes, tracked)
 	if err != nil {
 		return nil, fmt.Errorf("create tank: %w", err)
 	}
@@ -19,8 +23,8 @@ func (db *DB) CreateTank(t *models.TankCreate) (*models.Tank, error) {
 func (db *DB) GetTank(id int64) (*models.Tank, error) {
 	var t models.Tank
 	var photoURL *string
-	err := db.QueryRow(`SELECT id, name, emoji, liters, type, COALESCE(subtype,''), setup_date, COALESCE(filter_type,''), photo_url, COALESCE(notes,''), created_at FROM tanks WHERE id = ?`, id).
-		Scan(&t.ID, &t.Name, &t.Emoji, &t.Liters, &t.Type, &t.Subtype, &t.SetupDate, &t.FilterType, &photoURL, &t.Notes, &t.CreatedAt)
+	err := db.QueryRow(`SELECT id, name, emoji, liters, type, COALESCE(subtype,''), setup_date, COALESCE(filter_type,''), photo_url, COALESCE(notes,''), COALESCE(tracked_params,'ammonia,nitrite,nitrate,ph,temperature,gh,kh'), created_at FROM tanks WHERE id = ?`, id).
+		Scan(&t.ID, &t.Name, &t.Emoji, &t.Liters, &t.Type, &t.Subtype, &t.SetupDate, &t.FilterType, &photoURL, &t.Notes, &t.TrackedParams, &t.CreatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("get tank: %w", err)
 	}
@@ -29,7 +33,7 @@ func (db *DB) GetTank(id int64) (*models.Tank, error) {
 }
 
 func (db *DB) ListTanks() ([]models.Tank, error) {
-	rows, err := db.Query(`SELECT id, name, emoji, liters, type, COALESCE(subtype,''), setup_date, COALESCE(filter_type,''), photo_url, COALESCE(notes,''), created_at FROM tanks ORDER BY created_at DESC`)
+	rows, err := db.Query(`SELECT id, name, emoji, liters, type, COALESCE(subtype,''), setup_date, COALESCE(filter_type,''), photo_url, COALESCE(notes,''), COALESCE(tracked_params,'ammonia,nitrite,nitrate,ph,temperature,gh,kh'), created_at FROM tanks ORDER BY created_at DESC`)
 	if err != nil {
 		return nil, fmt.Errorf("list tanks: %w", err)
 	}
@@ -39,7 +43,7 @@ func (db *DB) ListTanks() ([]models.Tank, error) {
 	for rows.Next() {
 		var t models.Tank
 		var photoURL *string
-		if err := rows.Scan(&t.ID, &t.Name, &t.Emoji, &t.Liters, &t.Type, &t.Subtype, &t.SetupDate, &t.FilterType, &photoURL, &t.Notes, &t.CreatedAt); err != nil {
+		if err := rows.Scan(&t.ID, &t.Name, &t.Emoji, &t.Liters, &t.Type, &t.Subtype, &t.SetupDate, &t.FilterType, &photoURL, &t.Notes, &t.TrackedParams, &t.CreatedAt); err != nil {
 			return nil, fmt.Errorf("scan tank: %w", err)
 		}
 		t.PhotoURL = photoURL
@@ -60,6 +64,7 @@ func (db *DB) UpdateTank(id int64, u *models.TankUpdate) (*models.Tank, error) {
 	if u.FilterType != nil { sets += "filter_type = ?, "; args = append(args, *u.FilterType) }
 	if u.PhotoURL != nil { sets += "photo_url = ?, "; args = append(args, *u.PhotoURL) }
 	if u.Notes != nil { sets += "notes = ?, "; args = append(args, *u.Notes) }
+	if u.TrackedParams != nil { sets += "tracked_params = ?, "; args = append(args, *u.TrackedParams) }
 	if sets == "" {
 		return db.GetTank(id)
 	}

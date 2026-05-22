@@ -13,7 +13,7 @@ services:
       - PORT=8001
       - JWT_SECRET=change-this-to-a-random-secret
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8000/api/dashboard"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/api/health"]
       interval: 30s
       timeout: 5s
       retries: 3

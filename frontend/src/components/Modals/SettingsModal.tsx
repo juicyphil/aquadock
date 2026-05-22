@@ -8,11 +8,13 @@ import { useAuth } from '../Auth/AuthContext'
 
 interface Props {
   onClose: () => void
+  dashboardMode: 'detail' | 'overview'
+  onDashboardModeChange: (m: 'detail' | 'overview') => void
 }
 
-type Tab = 'profile' | 'params' | 'theme'
+type Tab = 'profile' | 'params' | 'theme' | 'dashboard'
 
-export function SettingsModal({ onClose }: Props) {
+export function SettingsModal({ onClose, dashboardMode, onDashboardModeChange }: Props) {
   const { t } = useTranslation()
   const { toast } = useToast()
   const { theme, setTheme } = useTheme()
@@ -59,6 +61,7 @@ export function SettingsModal({ onClose }: Props) {
         <h2>{t('settings.title')}</h2>
         <div className="modal-tabs">
           <button className={`tab-btn ${tab === 'profile' ? 'active' : ''}`} onClick={() => setTab('profile')}>{t('settings.profile')}</button>
+          <button className={`tab-btn ${tab === 'dashboard' ? 'active' : ''}`} onClick={() => setTab('dashboard')}>{t('settings.dashboard')}</button>
           <button className={`tab-btn ${tab === 'params' ? 'active' : ''}`} onClick={() => setTab('params')}>{t('settings.params')}</button>
           <button className={`tab-btn ${tab === 'theme' ? 'active' : ''}`} onClick={() => setTab('theme')}>{t('settings.theme')}</button>
         </div>
@@ -69,6 +72,33 @@ export function SettingsModal({ onClose }: Props) {
               <p><strong>{t('settings.username')}:</strong> {user?.username}</p>
               <p><strong>{t('settings.email')}:</strong> {user?.email}</p>
               <button className="btn btn-danger" onClick={() => { logout(); onClose() }}>{t('nav.logout')}</button>
+            </div>
+          )}
+
+          {tab === 'dashboard' && (
+            <div>
+              <p style={{ marginBottom: '1rem', color: 'var(--text2)' }}>
+                Choose your default dashboard view:
+              </p>
+              <div className="mode-toggle" style={{ display: 'inline-flex' }}>
+                <button
+                  className={`mode-toggle-btn ${dashboardMode === 'detail' ? 'active' : ''}`}
+                  onClick={() => onDashboardModeChange('detail')}
+                >
+                  {t('dashboard.mode_detail')}
+                </button>
+                <button
+                  className={`mode-toggle-btn ${dashboardMode === 'overview' ? 'active' : ''}`}
+                  onClick={() => onDashboardModeChange('overview')}
+                >
+                  {t('dashboard.mode_overview')}
+                </button>
+              </div>
+              <p style={{ marginTop: '1rem', fontSize: '0.85rem', color: 'var(--text3)' }}>
+                {dashboardMode === 'detail'
+                  ? 'Shows a detailed view of one tank at a time with tabs for inhabitants, events, and water parameters. Use the tank selector to switch between tanks.'
+                  : 'Shows an overview of all tanks as cards with summary stats. Click a card to view details in a modal.'}
+              </p>
             </div>
           )}
 

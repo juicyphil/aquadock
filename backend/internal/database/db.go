@@ -79,6 +79,34 @@ func (db *DB) Init() error {
 		created_at TEXT NOT NULL DEFAULT (datetime('now'))
 	);
 
+	CREATE TABLE IF NOT EXISTS event_completions (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+		completion_date TEXT NOT NULL,
+		created_at TEXT NOT NULL DEFAULT (datetime('now')),
+		UNIQUE(event_id, completion_date)
+	);
+
+	CREATE TABLE IF NOT EXISTS event_skips (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+		skip_date TEXT NOT NULL,
+		created_at TEXT NOT NULL DEFAULT (datetime('now')),
+		UNIQUE(event_id, skip_date)
+	);
+
+	CREATE TABLE IF NOT EXISTS issues (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		tank_id INTEGER NOT NULL REFERENCES tanks(id) ON DELETE CASCADE,
+		title TEXT NOT NULL,
+		description TEXT NOT NULL DEFAULT '',
+		observed_date TEXT NOT NULL,
+		resolved_at TEXT,
+		photo_url TEXT,
+		created_at TEXT NOT NULL DEFAULT (datetime('now')),
+		updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+	);
+
 	CREATE TABLE IF NOT EXISTS water_params (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		tank_id INTEGER NOT NULL REFERENCES tanks(id) ON DELETE CASCADE,
@@ -109,6 +137,9 @@ func (db *DB) Init() error {
 	CREATE INDEX IF NOT EXISTS idx_events_tank ON events(tank_id);
 	CREATE INDEX IF NOT EXISTS idx_events_date ON events(scheduled_date);
 	CREATE INDEX IF NOT EXISTS idx_events_completed ON events(completed_at);
+	CREATE INDEX IF NOT EXISTS idx_completions_event ON event_completions(event_id);
+	CREATE INDEX IF NOT EXISTS idx_skips_event ON event_skips(event_id);
+	CREATE INDEX IF NOT EXISTS idx_issues_tank ON issues(tank_id);
 	CREATE INDEX IF NOT EXISTS idx_params_tank ON water_params(tank_id);
 	CREATE INDEX IF NOT EXISTS idx_params_tested ON water_params(tested_at);
 	`
@@ -118,6 +149,7 @@ func (db *DB) Init() error {
 	}
 
 	db.Exec("ALTER TABLE tanks ADD COLUMN photo_url TEXT")
+	db.Exec("ALTER TABLE tanks ADD COLUMN tracked_params TEXT NOT NULL DEFAULT 'ammonia,nitrite,nitrate,ph,temperature,gh,kh'")
 
 	return db.seedParamRanges()
 }
