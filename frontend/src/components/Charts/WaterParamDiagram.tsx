@@ -11,19 +11,20 @@ interface Props {
 
 interface ParamConfig {
   key: string
-  label: string
+  labelKey: string
+  formula: string
   emoji: string
   unit: string
 }
 
 const ALL_PARAMS: ParamConfig[] = [
-  { key: 'ammonia', label: 'Ammonia (NH₃)', emoji: '☠️', unit: 'ppm' },
-  { key: 'nitrite', label: 'Nitrite (NO₂)', emoji: '⚠️', unit: 'ppm' },
-  { key: 'nitrate', label: 'Nitrate (NO₃)', emoji: '🌿', unit: 'ppm' },
-  { key: 'ph', label: 'pH', emoji: '🧪', unit: '' },
-  { key: 'temperature', label: 'Temp', emoji: '🌡️', unit: '°C' },
-  { key: 'gh', label: 'GH', emoji: '💎', unit: 'dGH' },
-  { key: 'kh', label: 'KH', emoji: '🛡️', unit: 'dKH' },
+  { key: 'ammonia', labelKey: 'param.ammonia', formula: '(NH₃)', emoji: '☠️', unit: 'ppm' },
+  { key: 'nitrite', labelKey: 'param.nitrite', formula: '(NO₂)', emoji: '⚠️', unit: 'ppm' },
+  { key: 'nitrate', labelKey: 'param.nitrate', formula: '(NO₃)', emoji: '🌿', unit: 'ppm' },
+  { key: 'ph', labelKey: 'param.ph', formula: '', emoji: '🧪', unit: '' },
+  { key: 'temperature', labelKey: 'param.temperature', formula: '', emoji: '🌡️', unit: '°C' },
+  { key: 'gh', labelKey: 'param.gh', formula: '', emoji: '💎', unit: 'dGH' },
+  { key: 'kh', labelKey: 'param.kh', formula: '', emoji: '🛡️', unit: 'dKH' },
 ]
 
 function paramStatus(value: number, min: number | null, max: number | null): 'ok' | 'warn' | 'bad' {
@@ -84,28 +85,28 @@ export function WaterParamDiagram({ params, trackedParams, paramRanges, tankSubt
           </defs>
 
           <rect x="10" y="25" width="120" height="60" rx="10" fill="var(--rose)" opacity="0.15" stroke="var(--rose)" strokeWidth="2" />
-          <text x="70" y="58" textAnchor="middle" fill="var(--rose)" fontSize="13" fontWeight="700">Ammonia</text>
+          <text x="70" y="58" textAnchor="middle" fill="var(--rose)" fontSize="13" fontWeight="700">{t('param.ammonia')}</text>
           <text x="70" y="73" textAnchor="middle" fill="var(--rose)" fontSize="10">NH₃ / NH₄⁺</text>
 
           <line x1="135" y1="55" x2="195" y2="55" stroke="var(--green)" strokeWidth="2" markerEnd="url(#arrowOk)" />
-          <text x="165" y="48" textAnchor="middle" fill="var(--text3)" fontSize="9">Nitrosomonas</text>
+          <text x="165" y="48" textAnchor="middle" fill="var(--text3)" fontSize="9">{t('diagram.nitrosomonas')}</text>
 
           <rect x="200" y="25" width="120" height="60" rx="10" fill="var(--amber)" opacity="0.15" stroke="var(--amber)" strokeWidth="2" />
-          <text x="260" y="58" textAnchor="middle" fill="var(--amber)" fontSize="13" fontWeight="700">Nitrite</text>
+          <text x="260" y="58" textAnchor="middle" fill="var(--amber)" fontSize="13" fontWeight="700">{t('param.nitrite')}</text>
           <text x="260" y="73" textAnchor="middle" fill="var(--amber)" fontSize="10">NO₂⁻</text>
 
           <line x1="325" y1="55" x2="385" y2="55" stroke="var(--green)" strokeWidth="2" markerEnd="url(#arrowOk)" />
-          <text x="355" y="48" textAnchor="middle" fill="var(--text3)" fontSize="9">Nitrobacter</text>
+          <text x="355" y="48" textAnchor="middle" fill="var(--text3)" fontSize="9">{t('diagram.nitrobacter')}</text>
 
           <rect x="390" y="25" width="120" height="60" rx="10" fill="var(--green)" opacity="0.15" stroke="var(--green)" strokeWidth="2" />
-          <text x="450" y="58" textAnchor="middle" fill="var(--green)" fontSize="13" fontWeight="700">Nitrate</text>
+          <text x="450" y="58" textAnchor="middle" fill="var(--green)" fontSize="13" fontWeight="700">{t('param.nitrate')}</text>
           <text x="450" y="73" textAnchor="middle" fill="var(--green)" fontSize="10">NO₃⁻</text>
 
           <line x1="515" y1="55" x2="555" y2="55" stroke="var(--text3)" strokeWidth="1.5" strokeDasharray="4 3" />
           <line x1="555" y1="55" x2="555" y2="105" stroke="var(--text3)" strokeWidth="1.5" strokeDasharray="4 3" />
           <line x1="555" y1="105" x2="40" y2="105" stroke="var(--text3)" strokeWidth="1.5" strokeDasharray="4 3" />
           <line x1="40" y1="105" x2="40" y2="90" stroke="var(--text3)" strokeWidth="1.5" strokeDasharray="4 3" markerEnd="url(#arrowWarn)" />
-          <text x="300" y="118" textAnchor="middle" fill="var(--text3)" fontSize="9">Water Changes → Remove Nitrate</text>
+          <text x="300" y="118" textAnchor="middle" fill="var(--text3)" fontSize="9">{t('diagram.water_changes')}</text>
         </svg>
       </div>
 
@@ -128,7 +129,7 @@ export function WaterParamDiagram({ params, trackedParams, paramRanges, tankSubt
                 <div key={p.key} className="diagram-gauge-card">
                   <div className="diagram-gauge-header">
                     <span>{p.emoji}</span>
-                    <span className="diagram-gauge-name">{p.label}</span>
+                    <span className="diagram-gauge-name">{t(p.labelKey)} {p.formula}</span>
                     {value != null ? (
                       <span className={`diagram-gauge-value param-${status}`}>
                         {value} {p.unit}

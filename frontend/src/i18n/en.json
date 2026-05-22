@@ -155,5 +155,8 @@
   "temperate": "Temperate",
   "diagram.nitrogen_cycle": "Nitrogen Cycle",
   "diagram.param_status": "Parameter Status",
-  "diagram.safe_range": "Safe Range"
+  "diagram.safe_range": "Safe Range",
+  "diagram.nitrosomonas": "Nitrosomonas",
+  "diagram.nitrobacter": "Nitrobacter",
+  "diagram.water_changes": "Water Changes → Remove Nitrate"
 }

@@ -1,6 +1,7 @@
 import React from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import type { WaterParam } from '../../types'
+import { useTranslation } from '../../i18n'
 
 interface Props {
   params: WaterParam[]
@@ -9,22 +10,23 @@ interface Props {
 
 interface ChartParam {
   key: string
-  label: string
+  labelKey: string
   color: string
   unit: string
 }
 
 const ALL_PARAMS: ChartParam[] = [
-  { key: 'ammonia', label: 'Ammonia (NH₃)', color: '#d45b6a', unit: 'ppm' },
-  { key: 'nitrite', label: 'Nitrite (NO₂)', color: '#d4a040', unit: 'ppm' },
-  { key: 'nitrate', label: 'Nitrate (NO₃)', color: '#d48a40', unit: 'ppm' },
-  { key: 'ph', label: 'pH', color: '#5b9fd4', unit: '' },
-  { key: 'temperature', label: 'Temperature (°C)', color: '#d46040', unit: '°C' },
-  { key: 'gh', label: 'General Hardness (GH)', color: '#5aa06a', unit: 'dGH' },
-  { key: 'kh', label: 'Carbonate Hardness (KH)', color: '#7a8ad4', unit: 'dKH' },
+  { key: 'ammonia', labelKey: 'param.ammonia', color: '#d45b6a', unit: 'ppm' },
+  { key: 'nitrite', labelKey: 'param.nitrite', color: '#d4a040', unit: 'ppm' },
+  { key: 'nitrate', labelKey: 'param.nitrate', color: '#d48a40', unit: 'ppm' },
+  { key: 'ph', labelKey: 'param.ph', color: '#5b9fd4', unit: '' },
+  { key: 'temperature', labelKey: 'param.temperature', color: '#d46040', unit: '°C' },
+  { key: 'gh', labelKey: 'param.gh', color: '#5aa06a', unit: 'dGH' },
+  { key: 'kh', labelKey: 'param.kh', color: '#7a8ad4', unit: 'dKH' },
 ]
 
 export function ParamChart({ params, trackedParams }: Props) {
+  const { t } = useTranslation()
   const sorted = [...params].sort((a, b) => a.tested_at.localeCompare(b.tested_at))
 
   const data = sorted.map(p => ({
@@ -51,7 +53,7 @@ export function ParamChart({ params, trackedParams }: Props) {
 
         return (
           <div key={p.key} className="param-chart-card">
-            <h4 className="param-chart-title">{p.label} {p.unit && <span className="param-unit">({p.unit})</span>}</h4>
+            <h4 className="param-chart-title">{t(p.labelKey)}{p.unit ? ` (${p.unit})` : ''}</h4>
             <ResponsiveContainer width="100%" height={160}>
               <LineChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
