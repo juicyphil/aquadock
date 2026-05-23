@@ -42,25 +42,27 @@ type TankUpdate struct {
 }
 
 type Inhabitant struct {
-	ID        int64  `json:"id"`
-	TankID    int64  `json:"tank_id"`
-	Name      string `json:"name"`
-	Species   string `json:"species"`
-	Count     int    `json:"count"`
-	Emoji     string `json:"emoji"`
-	AddedDate string `json:"added_date"`
-	Notes     string `json:"notes"`
-	CreatedAt string `json:"created_at"`
+	ID        int64   `json:"id"`
+	TankID    int64   `json:"tank_id"`
+	Name      string  `json:"name"`
+	Species   string  `json:"species"`
+	Count     int     `json:"count"`
+	Emoji     string  `json:"emoji"`
+	AddedDate string  `json:"added_date"`
+	Notes     string  `json:"notes"`
+	PhotoURL  *string `json:"photo_url"`
+	CreatedAt string  `json:"created_at"`
 }
 
 type InhabitantCreate struct {
-	TankID    int64  `json:"tank_id"`
-	Name      string `json:"name"`
-	Species   string `json:"species"`
-	Count     int    `json:"count"`
-	Emoji     string `json:"emoji"`
-	AddedDate string `json:"added_date"`
-	Notes     string `json:"notes"`
+	TankID    int64   `json:"tank_id"`
+	Name      string  `json:"name"`
+	Species   string  `json:"species"`
+	Count     int     `json:"count"`
+	Emoji     string  `json:"emoji"`
+	AddedDate string  `json:"added_date"`
+	Notes     string  `json:"notes"`
+	PhotoURL  *string `json:"photo_url"`
 }
 
 type Event struct {

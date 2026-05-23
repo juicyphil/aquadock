@@ -44,6 +44,7 @@ export interface Inhabitant {
   emoji: string
   added_date: string
   notes: string
+  photo_url: string | null
   created_at: string
 }
 
@@ -55,6 +56,7 @@ export interface InhabitantCreate {
   emoji?: string
   added_date?: string
   notes?: string
+  photo_url?: string | null
 }
 
 export interface Issue {

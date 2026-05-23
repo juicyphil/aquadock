@@ -61,6 +61,20 @@ export const api = {
   createInhabitant: (data: InhabitantCreate) => request<Inhabitant>(`/tanks/${data.tank_id}/inhabitants`, { method: 'POST', body: JSON.stringify(data) }),
   updateInhabitant: (id: number, data: Inhabitant) => request<Inhabitant>(`/inhabitants/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteInhabitant: (id: number) => request<void>(`/inhabitants/${id}`, { method: 'DELETE' }),
+  uploadInhabitantPhoto: (id: number, file: File) => {
+    const fd = new FormData()
+    fd.append('photo', file)
+    const token = localStorage.getItem('aquadock_token')
+    return fetch(`${BASE}/inhabitants/${id}/photo`, {
+      method: 'POST',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      body: fd,
+    }).then(async res => {
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
+      return data as { photo_url: string }
+    })
+  },
 
   // Events
   listEventsByTank: (tankId: number) => request<Event[]>(`/tanks/${tankId}/events`),

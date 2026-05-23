@@ -160,6 +160,7 @@ func (db *DB) Init() error {
 
 	db.Exec("ALTER TABLE tanks ADD COLUMN photo_url TEXT")
 	db.Exec("ALTER TABLE tanks ADD COLUMN tracked_params TEXT NOT NULL DEFAULT 'ammonia,nitrite,nitrate,ph,temperature,gh,kh'")
+	db.Exec("ALTER TABLE inhabitants ADD COLUMN photo_url TEXT")
 
 	if err := db.seedParamRanges(); err != nil {
 		return err

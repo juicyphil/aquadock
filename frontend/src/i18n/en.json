@@ -31,6 +31,7 @@
   "inhabitant.count": "Count",
   "inhabitant.add": "Add Inhabitant",
   "inhabitant.no_inhabitants": "No inhabitants yet.",
+  "inhabitant.edit": "Edit Inhabitant",
 
   "event.type": "Type",
   "event.title": "Title",

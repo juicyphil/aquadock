@@ -49,6 +49,7 @@ func main() {
 		})
 		r.Get("/tanks/photos/{filename}", photoHandler.Serve)
 		r.Get("/issues/photos/{filename}", issueHandler.ServePhoto)
+		r.Get("/inhabitants/photos/{filename}", photoHandler.ServeInhabitantPhoto)
 		r.Post("/auth/register", authHandler.Register)
 		r.Post("/auth/login", authHandler.Login)
 		r.With(handlers.JWTAuth(cfg.JWTSecret)).Get("/auth/status", authHandler.Status)
@@ -89,6 +90,7 @@ func main() {
 
 			r.Put("/inhabitants/{id}", inhabitantHandler.Update)
 			r.Delete("/inhabitants/{id}", inhabitantHandler.Delete)
+			r.Post("/inhabitants/{id}/photo", photoHandler.UploadInhabitantPhoto)
 
 			r.Put("/events/{id}", eventHandler.Update)
 			r.Put("/events/{id}/complete", eventHandler.Complete)

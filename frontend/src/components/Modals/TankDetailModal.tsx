@@ -28,6 +28,10 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
   const [showAddEvent, setShowAddEvent] = useState(false)
   const [showLogParam, setShowLogParam] = useState(false)
   const [newInhab, setNewInhab] = useState({ name: '', species: '', count: 1, emoji: '🐟', added_date: new Date().toISOString().slice(0, 10), notes: '' })
+  const [inhabPhotoFile, setInhabPhotoFile] = useState<File | null>(null)
+  const [editingInhabitant, setEditingInhabitant] = useState<Inhabitant | null>(null)
+  const [editInhabForm, setEditInhabForm] = useState({ name: '', species: '', count: 1, emoji: '🐟', added_date: '', notes: '' })
+  const [editInhabPhotoFile, setEditInhabPhotoFile] = useState<File | null>(null)
   const [newEv, setNewEv] = useState({ type: 'feed' as const, title: '', scheduled_date: new Date().toISOString().slice(0, 10), recurrence: '', note: '' })
   const [newParam, setNewParam] = useState({ ammonia: '', nitrite: '', nitrate: '', ph: '', temperature: '', gh: '', kh: '', notes: '' })
   const [editing, setEditing] = useState(false)
@@ -36,6 +40,7 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [savedPhotoUrl, setSavedPhotoUrl] = useState<string | null>(null)
   const [showLightbox, setShowLightbox] = useState(false)
+  const [inhabLightboxUrl, setInhabLightboxUrl] = useState<string | null>(null)
   const [editingEvent, setEditingEvent] = useState<EventType | null>(null)
   const [editEventForm, setEditEventForm] = useState({ type: '', title: '', date: '', time: '', recurrence: '', note: '' })
   const [issues, setIssues] = useState<Issue[]>([])
@@ -97,10 +102,46 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
 
   const handleAddInhabitant = async () => {
     try {
-      await api.createInhabitant({ tank_id: tank.id, ...newInhab, count: newInhab.count })
+      const created = await api.createInhabitant({ tank_id: tank.id, ...newInhab, count: newInhab.count })
+      if (inhabPhotoFile) {
+        await api.uploadInhabitantPhoto(created.id, inhabPhotoFile)
+      }
       toast('Inhabitant added', 'success')
       setShowAddInhab(false)
+      setInhabPhotoFile(null)
       setNewInhab({ name: '', species: '', count: 1, emoji: '🐟', added_date: new Date().toISOString().slice(0, 10), notes: '' })
+      loadData()
+    } catch (err: any) { toast(err.message, 'error') }
+  }
+
+  const startEditInhabitant = (inhab: Inhabitant) => {
+    setEditInhabForm({
+      name: inhab.name,
+      species: inhab.species,
+      count: inhab.count,
+      emoji: inhab.emoji,
+      added_date: inhab.added_date,
+      notes: inhab.notes,
+    })
+    setEditInhabPhotoFile(null)
+    setEditingInhabitant(inhab)
+  }
+
+  const handleEditInhabitant = async () => {
+    if (!editingInhabitant) return
+    try {
+      const updated = await api.updateInhabitant(editingInhabitant.id, {
+        ...editingInhabitant,
+        ...editInhabForm,
+        count: editInhabForm.count,
+      })
+      if (editInhabPhotoFile) {
+        const result = await api.uploadInhabitantPhoto(updated.id, editInhabPhotoFile)
+        await api.updateInhabitant(updated.id, { ...updated, photo_url: result.photo_url })
+      }
+      toast('Inhabitant updated', 'success')
+      setEditingInhabitant(null)
+      setEditInhabPhotoFile(null)
       loadData()
     } catch (err: any) { toast(err.message, 'error') }
   }
@@ -363,13 +404,20 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
                 <div className="inhabitant-list">
                   {inhabitants.map(inhab => (
                     <div key={inhab.id} className="inhabitant-card">
-                      <span className="inhab-emoji">{inhab.emoji}</span>
+                      {inhab.photo_url ? (
+                        <img className="card-photo clickable-photo" src={inhab.photo_url} alt={inhab.name} onClick={() => setInhabLightboxUrl(inhab.photo_url!)} />
+                      ) : (
+                        <span className="inhab-emoji">{inhab.emoji}</span>
+                      )}
                       <div className="inhab-info">
                         <span className="inhab-name">{inhab.name || tr('inhabitant.name')}</span>
                         <span className="inhab-species">{inhab.species}</span>
                         <span className="inhab-count">x{inhab.count}</span>
                       </div>
-                      <button className="btn btn-sm btn-danger" onClick={() => handleDeleteInhabitant(inhab.id)}>{tr('common.delete')}</button>
+                      <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                        <button className="btn btn-sm btn-secondary" onClick={() => startEditInhabitant(inhab)}>✏️</button>
+                        <button className="btn btn-sm btn-danger" onClick={() => handleDeleteInhabitant(inhab.id)}>{tr('common.delete')}</button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -396,9 +444,13 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
                       <input value={newInhab.emoji} onChange={e => setNewInhab({ ...newInhab, emoji: e.target.value })} />
                     </div>
                   </div>
+                  <div className="form-group">
+                    <label>{tr('issue.photo')}</label>
+                    <input type="file" accept="image/*" onChange={e => setInhabPhotoFile(e.target.files?.[0] || null)} />
+                  </div>
                   <div className="form-actions">
                     <button className="btn btn-primary" onClick={handleAddInhabitant}>{tr('common.add')}</button>
-                    <button className="btn btn-text" onClick={() => setShowAddInhab(false)}>{tr('common.cancel')}</button>
+                    <button className="btn btn-text" onClick={() => { setShowAddInhab(false); setInhabPhotoFile(null) }}>{tr('common.cancel')}</button>
                   </div>
                 </div>
               )}
@@ -569,6 +621,45 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
         </div>
       </div>
 
+      {editingInhabitant && (
+        <div className="modal-overlay" onClick={() => { setEditingInhabitant(null); setEditInhabPhotoFile(null) }}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>{tr('inhabitant.edit')}</h3>
+            {editingInhabitant.photo_url && (
+              <img className="detail-photo" src={editingInhabitant.photo_url} alt={editInhabForm.name} style={{ maxHeight: 120 }} />
+            )}
+            <div className="form-row">
+              <div className="form-group">
+                <label>{tr('inhabitant.name')}</label>
+                <input value={editInhabForm.name} onChange={e => setEditInhabForm({ ...editInhabForm, name: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label>{tr('inhabitant.species')}</label>
+                <input value={editInhabForm.species} onChange={e => setEditInhabForm({ ...editInhabForm, species: e.target.value })} />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>{tr('inhabitant.count')}</label>
+                <input type="number" value={editInhabForm.count} onChange={e => setEditInhabForm({ ...editInhabForm, count: Number(e.target.value) })} />
+              </div>
+              <div className="form-group">
+                <label>Emoji</label>
+                <input value={editInhabForm.emoji} onChange={e => setEditInhabForm({ ...editInhabForm, emoji: e.target.value })} />
+              </div>
+            </div>
+            <div className="form-group">
+              <label>{tr('issue.photo')}</label>
+              <input type="file" accept="image/*" onChange={e => setEditInhabPhotoFile(e.target.files?.[0] || null)} />
+            </div>
+            <div className="form-actions">
+              <button className="btn btn-primary" onClick={handleEditInhabitant}>{tr('common.save')}</button>
+              <button className="btn btn-text" onClick={() => { setEditingInhabitant(null); setEditInhabPhotoFile(null) }}>{tr('common.cancel')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {editingEvent && (
         <div className="modal-overlay" onClick={() => setEditingEvent(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -643,6 +734,12 @@ export function TankDetailModal({ tank, onClose, onUpdated }: Props) {
       {showLightbox && (savedPhotoUrl ?? tank.photo_url) && (
         <div className="lightbox-overlay" onClick={() => setShowLightbox(false)}>
           <img className="lightbox-image" src={savedPhotoUrl ?? tank.photo_url!} alt={tank.name} />
+        </div>
+      )}
+
+      {inhabLightboxUrl && (
+        <div className="lightbox-overlay" onClick={() => setInhabLightboxUrl(null)}>
+          <img className="lightbox-image" src={inhabLightboxUrl} alt="Inhabitant" />
         </div>
       )}
 
