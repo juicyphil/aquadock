@@ -3,7 +3,13 @@ import { useAuth } from '../Auth/AuthContext'
 import { useTheme } from '../../theme'
 import { useTranslation } from '../../i18n'
 
-const THEMES = ['light', 'dark', 'ocean', 'reef', 'pond'] as const
+const THEMES = [
+  { id: 'light', emoji: '☀️', label: 'Light' },
+  { id: 'dark', emoji: '🌙', label: 'Dark' },
+  { id: 'ocean', emoji: '🌊', label: 'Ocean' },
+  { id: 'reef', emoji: '🪸', label: 'Reef' },
+  { id: 'pond', emoji: '🪷', label: 'Pond' },
+] as const
 
 interface HeaderProps {
   viewMode: 'dashboard' | 'planner' | 'tanks'
@@ -20,17 +26,22 @@ export function Header({ viewMode, setViewMode, onAddTank, onSettings, dashboard
   const { theme, setTheme } = useTheme()
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [themeOpen, setThemeOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const themeRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (menuOpen && menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false)
       }
+      if (themeOpen && themeRef.current && !themeRef.current.contains(e.target as Node)) {
+        setThemeOpen(false)
+      }
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
-  }, [menuOpen])
+  }, [menuOpen, themeOpen])
 
   return (
     <header className="header">
@@ -66,12 +77,24 @@ export function Header({ viewMode, setViewMode, onAddTank, onSettings, dashboard
       <div className="header-right">
         <button className="icon-btn" onClick={onAddTank} title={t('nav.add_tank')}>➕</button>
         <button className="icon-btn" onClick={onSettings} title={t('nav.settings')}>⚙️</button>
-        <button className="icon-btn" onClick={() => {
-          const idx = THEMES.indexOf(theme)
-          setTheme(THEMES[(idx + 1) % THEMES.length])
-        }} title={t('settings.theme')}>
-          🎨
-        </button>
+        <div className="user-menu" ref={themeRef}>
+          <button className="icon-btn" onClick={() => setThemeOpen(!themeOpen)} title={t('settings.theme')}>
+            🎨
+          </button>
+          {themeOpen && (
+            <div className="dropdown theme-dropdown">
+              {THEMES.map(th => (
+                <button
+                  key={th.id}
+                  className={theme === th.id ? 'active' : ''}
+                  onClick={() => { setTheme(th.id); setThemeOpen(false) }}
+                >
+                  {th.emoji} {th.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
           {user ? (
           <div className="user-menu" ref={menuRef}>
             <button className="icon-btn" onClick={() => setMenuOpen(!menuOpen)}>

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import type { DashboardResponse, Tank } from '../../types'
 import { useTranslation } from '../../i18n'
 import { TankDetailView } from './TankDetailView'
@@ -23,6 +23,7 @@ function ParamBadge({ label, value, min, max }: { label: string; value: number; 
 
 export function DashboardView({ dashboard, dashboardMode, selectedTankId, onSelectTankId, onRefresh, onDelete }: Props) {
   const { t } = useTranslation()
+  const [drillDownTankId, setDrillDownTankId] = useState<number | null>(null)
 
   if (!dashboard) {
     return <div className="loading">{t('common.loading')}</div>
@@ -56,7 +57,36 @@ export function DashboardView({ dashboard, dashboardMode, selectedTankId, onSele
     return <div className="loading">{t('common.loading')}</div>
   }
 
-  // Overview mode: stat cards + tank grid (original dashboard)
+  // Drill-down from overview: show detail with a back button
+  if (dashboardMode === 'overview' && drillDownTankId) {
+    const drillTank = dashboard.tanks.find(t => t.id === drillDownTankId) ?? null
+    if (drillTank) {
+      return (
+        <div className="dashboard">
+          <div className="stat-cards">
+            <div className="stat-card">
+              <div className="stat-value">{dashboard.tanks.length}</div>
+              <div className="stat-label">{t('dashboard.tanks')}</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{dashboard.today_count}</div>
+              <div className="stat-label">{t('dashboard.today_tasks')}</div>
+            </div>
+            <div className="stat-card stat-warn">
+              <div className="stat-value">{dashboard.overdue_count}</div>
+              <div className="stat-label">{t('dashboard.overdue_tasks')}</div>
+            </div>
+          </div>
+          <button className="btn btn-text" onClick={() => setDrillDownTankId(null)} style={{ marginBottom: '0.75rem' }}>
+            ← {t('dashboard.mode_overview')}
+          </button>
+          <TankDetailView tank={drillTank} onUpdated={onRefresh} onDelete={onDelete} />
+        </div>
+      )
+    }
+  }
+
+  // Overview mode: stat cards + tank grid
   if (dashboardMode === 'overview') {
     return (
       <div className="dashboard">
@@ -77,7 +107,7 @@ export function DashboardView({ dashboard, dashboardMode, selectedTankId, onSele
 
         <div className="tank-grid">
           {dashboard.tanks.map(dt => (
-            <div key={dt.id} className="tank-card" onClick={() => onSelectTankId(dt.id)}>
+            <div key={dt.id} className="tank-card" onClick={() => { onSelectTankId(dt.id); setDrillDownTankId(dt.id) }}>
               <div className="tank-card-header">
                 {dt.photo_url ? (
                   <img className="card-photo" src={dt.photo_url} alt={dt.name} />

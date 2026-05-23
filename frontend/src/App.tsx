@@ -12,6 +12,7 @@ import { AddTankModal } from './components/Modals/AddTankModal'
 import { TankDetailModal } from './components/Modals/TankDetailModal'
 import { SettingsModal } from './components/Modals/SettingsModal'
 import { useToast } from './components/UI/Toast'
+import { useConfirm } from './components/UI/ConfirmDialog'
 import { api } from './api/client'
 import type { Tank, DashboardResponse } from './types'
 import './App.css'
@@ -27,6 +28,7 @@ function loadMode(): 'detail' | 'overview' {
 export default function App() {
   const { user, loading: authLoading } = useAuth()
   const { toast } = useToast()
+  const confirm = useConfirm()
   const { t, lang, setLang } = useTranslation()
 
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard')
@@ -102,7 +104,7 @@ export default function App() {
 
   const handleDeleteDashboardTank = useCallback(async () => {
     if (!selectedTankForDashboard) return
-    if (!confirm('Delete this tank?')) return
+    if (!(await confirm('Delete this tank?'))) return
     try {
       await api.deleteTank(selectedTankForDashboard.id)
       toast('Tank deleted', 'success')

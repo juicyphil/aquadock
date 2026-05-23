@@ -4,6 +4,7 @@ import { ThemeProvider } from './theme'
 import { LangProvider } from './i18n'
 import { AuthProvider } from './components/Auth/AuthContext'
 import { ToastProvider } from './components/UI/Toast'
+import { ConfirmProvider } from './components/UI/ConfirmDialog'
 import App from './App'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -12,7 +13,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <LangProvider>
         <AuthProvider>
           <ToastProvider>
-            <App />
+            <ConfirmProvider>
+              <App />
+            </ConfirmProvider>
           </ToastProvider>
         </AuthProvider>
       </LangProvider>

@@ -10,6 +10,7 @@ services:
       - aquadock_data:/data
     environment:
       - DB_PATH=/data/aquadock.db
+      - PHOTO_DIR=/data/photos
       - PORT=8001
       - JWT_SECRET=change-this-to-a-random-secret
     healthcheck:

@@ -4,6 +4,7 @@ import { EVENT_TYPES, RECURRENCE_OPTIONS } from '../../types'
 import { api } from '../../api/client'
 import { useTranslation } from '../../i18n'
 import { useToast } from '../UI/Toast'
+import { useConfirm } from '../UI/ConfirmDialog'
 import { ParamChart } from '../Charts/ParamChart'
 import { WaterParamDiagram } from '../Charts/WaterParamDiagram'
 
@@ -17,6 +18,7 @@ type Tab = 'info' | 'inhabitants' | 'events' | 'issues' | 'params'
 
 export function TankDetailView({ tank, onUpdated, onDelete }: Props) {
   const { toast } = useToast()
+  const confirm = useConfirm()
   const { t: tr } = useTranslation()
   const [tab, setTab] = useState<Tab>('info')
   const [inhabitants, setInhabitants] = useState<Inhabitant[]>([])
@@ -34,6 +36,7 @@ export function TankDetailView({ tank, onUpdated, onDelete }: Props) {
   const [editEventForm, setEditEventForm] = useState({ type: '', title: '', date: '', time: '', recurrence: '', note: '' })
   const [pendingPhoto, setPendingPhoto] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const [savedPhotoUrl, setSavedPhotoUrl] = useState<string | null>(null)
   const [showLightbox, setShowLightbox] = useState(false)
   const [issues, setIssues] = useState<Issue[]>([])
   const [paramRanges, setParamRanges] = useState<any[]>([])
@@ -65,6 +68,10 @@ export function TankDetailView({ tank, onUpdated, onDelete }: Props) {
       toast('Failed to load tank data', 'error')
     }
   }, [tank.id, toast])
+
+  useEffect(() => {
+    setSavedPhotoUrl(null)
+  }, [tank.id])
 
   useEffect(() => { loadData() }, [loadData])
 
@@ -99,6 +106,7 @@ export function TankDetailView({ tank, onUpdated, onDelete }: Props) {
   }
 
   const handleDeleteInhabitant = async (id: number) => {
+    if (!(await confirm('Delete this inhabitant?'))) return
     try {
       await api.deleteInhabitant(id)
       loadData()
@@ -151,6 +159,7 @@ export function TankDetailView({ tank, onUpdated, onDelete }: Props) {
       }
       updateData.photo_url = photoURL
       await api.updateTank(tank.id, updateData)
+      if (photoURL) setSavedPhotoUrl(photoURL + '?t=' + Date.now())
       toast('Tank updated', 'success')
       setEditing(false)
       setPendingPhoto(null)
@@ -162,7 +171,7 @@ export function TankDetailView({ tank, onUpdated, onDelete }: Props) {
   const trackedParams = tank.tracked_params ? tank.tracked_params.split(',') : ['ammonia','nitrite','nitrate','ph','temperature','gh','kh']
 
   const handleDeleteEvent = async (id: number) => {
-    if (!confirm('Delete this event?')) return
+    if (!(await confirm('Delete this event?'))) return
     try {
       await api.deleteEvent(id)
       toast('Event deleted', 'success')
@@ -221,7 +230,7 @@ export function TankDetailView({ tank, onUpdated, onDelete }: Props) {
   }
 
   const handleDeleteIssue = async (id: number) => {
-    if (!confirm('Delete this issue?')) return
+    if (!(await confirm('Delete this issue?'))) return
     try {
       await api.deleteIssue(id)
       toast('Issue deleted', 'success')
@@ -273,8 +282,8 @@ export function TankDetailView({ tank, onUpdated, onDelete }: Props) {
     <div>
       {/* Tank Header */}
       <div className="tank-detail-header">
-        {tank.photo_url ? (
-          <img className="tank-detail-photo clickable-photo" src={tank.photo_url} alt={tank.name} onClick={() => setShowLightbox(true)} />
+        {(savedPhotoUrl ?? tank.photo_url) ? (
+          <img className="tank-detail-photo clickable-photo" src={savedPhotoUrl ?? tank.photo_url!} alt={tank.name} onClick={() => setShowLightbox(true)} />
         ) : (
           <span className="tank-detail-emoji">{tank.emoji}</span>
         )}
@@ -331,8 +340,8 @@ export function TankDetailView({ tank, onUpdated, onDelete }: Props) {
             ) : (
               <div>
                 <h3>{tr('tank.edit')}</h3>
-                {(photoPreview || tank.photo_url) && (
-                  <img className="detail-photo" src={photoPreview || tank.photo_url!} alt={tank.name} />
+                {(photoPreview || savedPhotoUrl || tank.photo_url) && (
+                  <img className="detail-photo" src={photoPreview || savedPhotoUrl || tank.photo_url!} alt={tank.name} />
                 )}
                 <div className="form-group">
                   <label>Photo</label>
@@ -597,27 +606,6 @@ export function TankDetailView({ tank, onUpdated, onDelete }: Props) {
                 </div>
               </>
             )}
-            {showLogParam && (
-              <div className="modal-inline">
-                <div className="form-row">
-                  {trackedParams.includes('ammonia') && <div className="form-group"><label>Ammonia</label><input type="number" step="0.01" value={newParam.ammonia} onChange={e => setNewParam({ ...newParam, ammonia: e.target.value })} /></div>}
-                  {trackedParams.includes('nitrite') && <div className="form-group"><label>Nitrite</label><input type="number" step="0.01" value={newParam.nitrite} onChange={e => setNewParam({ ...newParam, nitrite: e.target.value })} /></div>}
-                  {trackedParams.includes('nitrate') && <div className="form-group"><label>Nitrate</label><input type="number" step="0.1" value={newParam.nitrate} onChange={e => setNewParam({ ...newParam, nitrate: e.target.value })} /></div>}
-                </div>
-                <div className="form-row">
-                  {trackedParams.includes('ph') && <div className="form-group"><label>pH</label><input type="number" step="0.1" value={newParam.ph} onChange={e => setNewParam({ ...newParam, ph: e.target.value })} /></div>}
-                  {trackedParams.includes('temperature') && <div className="form-group"><label>Temperature</label><input type="number" step="0.1" value={newParam.temperature} onChange={e => setNewParam({ ...newParam, temperature: e.target.value })} /></div>}
-                </div>
-                <div className="form-row">
-                  {trackedParams.includes('gh') && <div className="form-group"><label>General Hardness (GH)</label><input type="number" step="0.1" value={newParam.gh} onChange={e => setNewParam({ ...newParam, gh: e.target.value })} /></div>}
-                  {trackedParams.includes('kh') && <div className="form-group"><label>Carbonate Hardness (KH)</label><input type="number" step="0.1" value={newParam.kh} onChange={e => setNewParam({ ...newParam, kh: e.target.value })} /></div>}
-                </div>
-                <div className="form-actions">
-                  <button className="btn btn-primary" onClick={handleLogParam}>{tr('common.save')}</button>
-                  <button className="btn btn-text" onClick={() => setShowLogParam(false)}>{tr('common.cancel')}</button>
-                </div>
-              </div>
-            )}
           </div>
         )}
       </div>
@@ -695,10 +683,36 @@ export function TankDetailView({ tank, onUpdated, onDelete }: Props) {
         </div>
       )}
 
+      {/* Log Water Test Modal */}
+      {showLogParam && (
+        <div className="modal-overlay" onClick={() => setShowLogParam(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>{tr('param.log')}</h3>
+            <div className="form-row">
+              {trackedParams.includes('ammonia') && <div className="form-group"><label>Ammonia</label><input type="number" step="0.01" value={newParam.ammonia} onChange={e => setNewParam({ ...newParam, ammonia: e.target.value })} /></div>}
+              {trackedParams.includes('nitrite') && <div className="form-group"><label>Nitrite</label><input type="number" step="0.01" value={newParam.nitrite} onChange={e => setNewParam({ ...newParam, nitrite: e.target.value })} /></div>}
+              {trackedParams.includes('nitrate') && <div className="form-group"><label>Nitrate</label><input type="number" step="0.1" value={newParam.nitrate} onChange={e => setNewParam({ ...newParam, nitrate: e.target.value })} /></div>}
+            </div>
+            <div className="form-row">
+              {trackedParams.includes('ph') && <div className="form-group"><label>pH</label><input type="number" step="0.1" value={newParam.ph} onChange={e => setNewParam({ ...newParam, ph: e.target.value })} /></div>}
+              {trackedParams.includes('temperature') && <div className="form-group"><label>Temperature</label><input type="number" step="0.1" value={newParam.temperature} onChange={e => setNewParam({ ...newParam, temperature: e.target.value })} /></div>}
+            </div>
+            <div className="form-row">
+              {trackedParams.includes('gh') && <div className="form-group"><label>General Hardness (GH)</label><input type="number" step="0.1" value={newParam.gh} onChange={e => setNewParam({ ...newParam, gh: e.target.value })} /></div>}
+              {trackedParams.includes('kh') && <div className="form-group"><label>Carbonate Hardness (KH)</label><input type="number" step="0.1" value={newParam.kh} onChange={e => setNewParam({ ...newParam, kh: e.target.value })} /></div>}
+            </div>
+            <div className="form-actions">
+              <button className="btn btn-primary" onClick={handleLogParam}>{tr('common.save')}</button>
+              <button className="btn btn-text" onClick={() => setShowLogParam(false)}>{tr('common.cancel')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Lightbox */}
-      {showLightbox && tank.photo_url && (
+      {showLightbox && (savedPhotoUrl ?? tank.photo_url) && (
         <div className="lightbox-overlay" onClick={() => setShowLightbox(false)}>
-          <img className="lightbox-image" src={tank.photo_url} alt={tank.name} />
+          <img className="lightbox-image" src={savedPhotoUrl ?? tank.photo_url!} alt={tank.name} />
         </div>
       )}
 
@@ -727,6 +741,7 @@ export function TankDetailView({ tank, onUpdated, onDelete }: Props) {
                   <button className="btn btn-sm btn-danger"
                     style={{ position: 'absolute', top: 4, right: 4 }}
                     onClick={async () => {
+                      if (!(await confirm('Delete this photo?'))) return
                       await api.deleteIssuePhoto(ph.id)
                       setViewingIssuePhotos(prev => prev.filter(p => p.id !== ph.id))
                     }}>🗑️</button>

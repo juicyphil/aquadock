@@ -4,6 +4,7 @@ import { EVENT_TYPES, RECURRENCE_OPTIONS } from '../../types'
 import { api } from '../../api/client'
 import { useTranslation } from '../../i18n'
 import { useToast } from '../UI/Toast'
+import { useConfirm } from '../UI/ConfirmDialog'
 
 const PLANNER_DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
@@ -17,6 +18,7 @@ interface Props {
 export function PlannerView({ tanks, onRefresh }: Props) {
   const { t } = useTranslation()
   const { toast } = useToast()
+  const confirm = useConfirm()
   const [mode, setMode] = useState<PlannerMode>('day')
   const [currentDate, setCurrentDate] = useState(() => new Date())
   const [events, setEvents] = useState<EventOccurrence[]>([])
@@ -140,17 +142,17 @@ export function PlannerView({ tanks, onRefresh }: Props) {
 
   const handleDeleteEvent = async (e: EventOccurrence) => {
     if (e.recurrence) {
-      const action = confirm('Delete this occurrence or the whole series?\nOK = just this one\nCancel = whole series')
+      const action = await confirm('Delete this occurrence or the whole series?\nOK = just this one\nCancel = whole series')
       if (action) {
         await api.skipEventOccurrence(e.id, e.occurrence_date)
         toast('Occurrence skipped', 'success')
       } else {
-        if (!confirm('Delete the entire recurring series?')) return
+        if (!(await confirm('Delete the entire recurring series?'))) return
         await api.deleteEvent(e.id)
         toast('Series deleted', 'success')
       }
     } else {
-      if (!confirm('Delete this event?')) return
+      if (!(await confirm('Delete this event?'))) return
       await api.deleteEvent(e.id)
       toast('Event deleted', 'success')
     }
